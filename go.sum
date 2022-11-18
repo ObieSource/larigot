@@ -16,6 +16,8 @@ codeberg.org/FiskFan1999/gemini v0.0.0-20221010183157-37e969e9a9d4 h1:EN4XF1QhjQ
 codeberg.org/FiskFan1999/gemini v0.0.0-20221010183157-37e969e9a9d4/go.mod h1:1SZCkjnrldYZ9yQr1DEzaSYUrEVmZpdSEgzJo44uEYA=
 codeberg.org/FiskFan1999/gemini v0.0.0-20221014180642-6de744f8e7b0 h1:r2j25SqhLwncLMFxi7EFPuuQbHqf/DOZOKEieBWbTI8=
 codeberg.org/FiskFan1999/gemini v0.0.0-20221014180642-6de744f8e7b0/go.mod h1:1SZCkjnrldYZ9yQr1DEzaSYUrEVmZpdSEgzJo44uEYA=
+codeberg.org/FiskFan1999/gemini v0.0.0-20221118063951-abef19fc97a4 h1:uMsfwHDVHvUI8xQp+YwOwoGIU9Y8EC5nXhdZzbV6lPo=
+codeberg.org/FiskFan1999/gemini v0.0.0-20221118063951-abef19fc97a4/go.mod h1:1SZCkjnrldYZ9yQr1DEzaSYUrEVmZpdSEgzJo44uEYA=
 github.com/BurntSushi/toml v1.2.0 h1:Rt8g24XnyGTyglgET/PRUNlrUeu9F5L+7FilkXfZgs0=
 github.com/BurntSushi/toml v1.2.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/coinpaprika/ratelimiter v0.2.1 h1:bng1NJ4CvGcLyksdRLoDzWoURISYV5O95XPS/gS2FJc=

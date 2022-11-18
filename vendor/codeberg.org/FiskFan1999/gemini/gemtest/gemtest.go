@@ -1,29 +1,3 @@
-// gemtest provides a framework to streamline unit testing of a codeberg.org/FiskFan1999/gemini server. It takes care of setting up a temporary server and creating server certificates and as many unique client certificates as the developer requests. Thus, he or she will only be concerned with the top-level handler function (refer to the FiskFan1999/gemini library), and the pairs of input requests and expected output.
-//
-// gemtest will run each specified request in order, and report wether the expected output matches what was recieved. If one request does not match, it will be reported, and the test will continue through the rest of the cases (t.Error as opposed to t.Fatal). Note that each request will immediately come after the previous one, so be mindful of race conditions caused by the server handling a request after sending the response and closing the connection.
-/*
-package main
-
-import (
-
-	"crypto/tls"
-	"net/url"
-	"testing"
-
-	"codeberg.org/FiskFan1999/gemini"
-	"codeberg.org/FiskFan1999/gemini/gemtest"
-
-)
-
-	func TestExample(t *testing.T) {
-		handler := func(*url.URL, *tls.Conn) gemini.Response {
-			return gemini.ResponseFormat{gemini.Success, "text/plain", gemini.Lines{"hello"}}
-		}
-		serv := gemtest.Testd(t, handler, 0)
-		defer serv.Stop()
-		serv.Check(Input{"/", 0, []byte("20 text/plain\r\nhello\r\n")})
-	} // this test will pass
-*/
 package gemtest
 
 import (

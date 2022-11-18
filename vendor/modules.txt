@@ -1,4 +1,4 @@
-# codeberg.org/FiskFan1999/gemini v0.0.0-20221014180642-6de744f8e7b0
+# codeberg.org/FiskFan1999/gemini v0.0.0-20221118063951-abef19fc97a4
 ## explicit; go 1.19
 codeberg.org/FiskFan1999/gemini
 codeberg.org/FiskFan1999/gemini/gemtest

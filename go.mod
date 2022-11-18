@@ -3,7 +3,7 @@ module github.com/ObieSource/larigot
 go 1.19
 
 require (
-	codeberg.org/FiskFan1999/gemini v0.0.0-20221014180642-6de744f8e7b0 // indirect
+	codeberg.org/FiskFan1999/gemini v0.0.0-20221118063951-abef19fc97a4 // indirect
 	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/coinpaprika/ratelimiter v0.2.1 // indirect
 	github.com/davrux/go-smtptester v0.0.0-20211115065314-2bb8bf1cc76a // indirect
