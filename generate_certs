@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Generate TLS certificates for TOFU use
+#
+# use:
+# ./generate_certs [domain.name]
+# domain required to avoid domain mismatch.
+
+# from https://stackoverflow.com/a/10176685
+
+if [ "$#" != "1" ]
+then
+    echo 'Error: no domain specified'
+    echo $0 "<example.net>"
+    exit 1
+fi
+
+if [ -f "cert.pem" ] || [ -f "key.pem" ]
+then
+    echo 'Certificate or Secret files already exist. If you would like to overwrite them, please `rm cert.pem key.pem`'
+    exit 2
+fi
+
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365 -subj "/CN=$1" -nodes
+
+# The following command can generate a self-signed cert that can be used by a client connecting to the server. Note that the subject is blank, because it is not needed, as larigot operates by assigning the fingerprint of a certificate to a user during login regardless of the subject.
+
+# openssl req -x509 -newkey rsa:4096 -keyout key.pem -days 365 -out cert.pem -sha256 -nodes -subj '/'
+

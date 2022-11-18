@@ -1,0 +1,60 @@
+forumName="obieBoard"
+hostName="localhost"
+onionAddress="gemini://addr.onion"
+listen="0.0.0.0:1965"
+
+#certificates
+cert="cert.pem"
+key="key.pem"
+
+#filepath to database file
+database="test.db"
+
+#rate limiting
+limitConnections=5
+limitWindow=15 # seconds
+
+#log file
+log="connections.log"
+
+# user priviledge levels.
+# 1=mod 2=admin
+# 0=ordinary level (not need to set)
+#[Priviledges]
+#alice=1 # CHANGE THESE
+#bob=2
+
+[Admin]
+email=[ "admin1@example.net", "admin2@example.net", "admin3@example.net" ] # etc.
+
+# smtp configuration for validation
+[Smtp]
+Enabled=false
+From="from@example.net"
+Address="email-smtp.us-east-1.amazonaws.com" # etc.
+Type="starttls" # "plain"/"tls"/"starttls"
+Port="587"
+User="smtp username"
+Pass="smtp password"
+
+#[page]
+#name="/path/to/file"
+#rules="rules.txt"
+
+[[forum]]
+name="First forum"
+
+[[forum.subforum]]
+name="First subforum"
+id="firstfirstsub"
+
+[[forum.subforum]]
+name="Second subforum"
+id="firstsecondsub"
+
+[[forum]]
+name="Second forum"
+
+[[forum.subforum]]
+name="First subforum"
+id="secondfirstsub"
