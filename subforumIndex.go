@@ -95,7 +95,7 @@ func SubforumIndexHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		fmt.Println(err.Error())
 		return gemini.ResponseFormat{
 			gemini.TemporaryFailure,
-			gemini.Mime(err.Error()),
+			err.Error(),
 			nil,
 		}
 	}

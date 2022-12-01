@@ -55,12 +55,6 @@ const (
 // Defined in Gemini specification
 const DefaultAddress = ":1965"
 
-// Mime-type, printed alongside the status code seperated by a space.
-type Mime string
-
-// Slice of lines to be printed below. Note that each string includes the prompt (you may choose to use constants by for example `fmt.Sprintf("%header text", gemini.Header)`. Each line MUST not include any whitespace at the prefix or suffix, including newlines (note that the Gemini protocol specifies Windows-style newlines including carriage returns).
-type Lines []string
-
 // Interface that is returned by the root-level handler. `bytes()` returns the response from the server exactly as it should be sent to the user, including the status code and MIME type, and carriage-return newlines where appropriate.
 type Response interface {
 	Bytes() []byte
@@ -70,8 +64,8 @@ type Response interface {
 // ResponseRead replies to the request with the contents of an io.ReadCloser (such as an os.File). If an io.Reader is used, see io.NopCloser. The Content is read after the handler function returns this struct, after which ResponseRead.Content will be closed. NOTE: if an error is recieved while reading from ResponseRead.Content, the error message will be shown as the Mime type with Status TemporaryFailure. Otherwise, the response will always have status code Success.
 type ResponseRead struct {
 	Content io.ReadCloser
-	Mime
-	Name string
+	Mime    string
+	Name    string
 }
 
 func (r ResponseRead) Bytes() []byte {
@@ -79,7 +73,7 @@ func (r ResponseRead) Bytes() []byte {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "20 %s\r\n", r.Mime)
 	if _, err := io.Copy(&buf, r.Content); err != nil {
-		return ResponseFormat{Status: TemporaryFailure, Mime: Mime(err.Error()), Lines: nil}.Bytes()
+		return ResponseFormat{Status: TemporaryFailure, Mime: err.Error(), Lines: nil}.Bytes()
 	}
 	return buf.Bytes()
 }
@@ -103,7 +97,7 @@ func (resp ResponsePlain) String() string {
 // Formatted response. The status, MIME type, and each line are specified seperately. Note that each string in Lines MUST NOT contain any whitespace or newline characters of it's own, as this will break the formatting.
 type ResponseFormat struct {
 	Status
-	Mime
+	Mime string
 	Lines
 }
 

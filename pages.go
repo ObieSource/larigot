@@ -22,7 +22,7 @@ func PageHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.BadRequest,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -36,7 +36,7 @@ func PageHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.TemporaryFailure,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}

@@ -3,14 +3,45 @@ package gemtest
 import (
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"sync"
 	"testing"
 
 	"codeberg.org/FiskFan1999/gemini"
 	"github.com/madflojo/testcerts"
+	"github.com/sergi/go-diff/diffmatchpatch"
+	"gopkg.in/src-d/go-git.v4/utils/diff"
 )
+
+var ErrCheckDidNotMatch = errors.New("Expected result did not match output.")
+
+// Output from package-level Check command.
+
+func pretty(a, b []byte) string {
+	d := diff.Do(string(a), string(b))
+	return diffmatchpatch.New().DiffPrettyText(d)
+}
+
+// Simpler check function. For a given handler and the request URI in string form, check wether the output matches the expected response. Note that client certificates cannot be handled with this function (use gemtest.Testd instead).
+// The error is any error that is thrown while parsing the passed url, or ErrCheckDidNotMatch. If ErrCheckDidNotMatch, then difference is a string with the difference in such a way that it can be printed for debugging.
+func Check(handler gemini.Handler, urlstr string, expectedresp []byte) (err error, difference string) {
+	url, err := url.Parse(urlstr)
+	if err != nil {
+		return err, ""
+	}
+
+	var response gemini.Response = handler(url, nil)
+	respbytes := response.Bytes()
+
+	if !bytes.Equal(respbytes, expectedresp) {
+		return ErrCheckDidNotMatch, pretty(expectedresp, respbytes)
+	}
+
+	return nil, ""
+}
 
 type TestDstr struct {
 	// The client certificates that may be specified for requests (to simulate different users).

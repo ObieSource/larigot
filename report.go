@@ -48,7 +48,7 @@ func ReportHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.TemporaryFailure,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -87,7 +87,7 @@ func ReportHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	} else if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.BadRequest,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -102,7 +102,7 @@ func ReportHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		} else {
 			return gemini.ResponseFormat{
 				Status: gemini.TemporaryFailure,
-				Mime:   gemini.Mime(err.Error()),
+				Mime:   err.Error(),
 				Lines:  nil,
 			}
 		}

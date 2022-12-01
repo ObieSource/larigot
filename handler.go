@@ -66,7 +66,7 @@ func handler(u *url.URL, c *tls.Conn) gemini.Response {
 			log.Println(wait)
 			return gemini.ResponseFormat{
 				Status: gemini.SlowDown,
-				Mime:   gemini.Mime(fmt.Sprintf("%d", int(wait)+1)),
+				Mime:   fmt.Sprintf("%d", int(wait)+1),
 				Lines:  nil,
 			}
 		} else {

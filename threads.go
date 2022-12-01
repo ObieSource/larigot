@@ -82,11 +82,11 @@ func OnNewPost(username, threadID, text string) gemini.ResponseFormat {
 	}); err != nil {
 		return gemini.ResponseFormat{
 			gemini.TemporaryFailure,
-			gemini.Mime(err.Error()),
+			err.Error(),
 			nil,
 		}
 	}
-	return gemini.ResponseFormat{gemini.RedirectTemporary, gemini.Mime(fmt.Sprintf("/thread/%s/", threadID)), nil}
+	return gemini.ResponseFormat{gemini.RedirectTemporary, fmt.Sprintf("/thread/%s/", threadID), nil}
 }
 
 func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
@@ -115,7 +115,7 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	} else if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.TemporaryFailure,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -132,7 +132,7 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.TemporaryFailure,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -276,7 +276,7 @@ func OnNewThread(subforum, username, title, text string) gemini.ResponseFormat {
 	if err := ValidateThreadTitle(title); err != nil {
 		return gemini.ResponseFormat{
 			gemini.BadRequest,
-			gemini.Mime(err.Error()),
+			err.Error(),
 			nil,
 		}
 	}
@@ -364,12 +364,12 @@ func OnNewThread(subforum, username, title, text string) gemini.ResponseFormat {
 	}); err != nil {
 		return gemini.ResponseFormat{
 			gemini.TemporaryFailure,
-			gemini.Mime(err.Error()),
+			err.Error(),
 			nil,
 		}
 	}
 
-	return gemini.ResponseFormat{gemini.RedirectTemporary, gemini.Mime(fmt.Sprintf("/f/%s/", subforum)), nil}
+	return gemini.ResponseFormat{gemini.RedirectTemporary, fmt.Sprintf("/f/%s/", subforum), nil}
 }
 
 func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
@@ -389,7 +389,7 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	} else if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.TemporaryFailure,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -406,7 +406,7 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		} else {
 			return gemini.ResponseFormat{
 				gemini.RedirectTemporary,
-				gemini.Mime(fmt.Sprintf("/%s/%s/", strings.Join(parts, "/"), u.RawQuery)),
+				fmt.Sprintf("/%s/%s/", strings.Join(parts, "/"), u.RawQuery),
 				nil,
 			}
 		}
@@ -423,7 +423,7 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -431,7 +431,7 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}

@@ -64,7 +64,7 @@ func VerifyUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	}); err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.BadRequest,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -84,7 +84,7 @@ func LogoutUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		}); err != nil {
 			return gemini.ResponseFormat{
 				gemini.TemporaryFailure,
-				gemini.Mime(err.Error()),
+				err.Error(),
 				nil,
 			}
 		}
@@ -119,7 +119,7 @@ func LoginUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -143,7 +143,7 @@ func LoginUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			}); err != nil {
 				return gemini.ResponseFormat{
 					gemini.TemporaryFailure,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -151,7 +151,7 @@ func LoginUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 				// redirect to password
 				return gemini.ResponseFormat{
 					gemini.RedirectTemporary,
-					gemini.Mime(fmt.Sprintf("/login/%s/", u.RawQuery)),
+					fmt.Sprintf("/login/%s/", u.RawQuery),
 					nil,
 				}
 			} else {
@@ -174,7 +174,7 @@ func LoginUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -182,7 +182,7 @@ func LoginUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -218,7 +218,7 @@ func LoginUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			}); err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -239,7 +239,7 @@ func LoginUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			}); err != nil {
 				return gemini.ResponseFormat{
 					gemini.TemporaryFailure,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -330,21 +330,21 @@ func RegisterUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
 			if err := validateUsername(user); err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			} else {
 				// username is ok. Redirect to email address.
 				return gemini.ResponseFormat{
 					gemini.RedirectTemporary,
-					gemini.Mime(fmt.Sprintf("/register/%s/", u.RawQuery)),
+					fmt.Sprintf("/register/%s/", u.RawQuery),
 					nil,
 				}
 			}
@@ -360,7 +360,7 @@ func RegisterUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			// TODO: validate email?
 			return gemini.ResponseFormat{
 				gemini.RedirectTemporary,
-				gemini.Mime(fmt.Sprintf("/%s/%s/", strings.Join(parts, "/"), u.RawQuery)),
+				fmt.Sprintf("/%s/%s/", strings.Join(parts, "/"), u.RawQuery),
 				nil,
 			}
 		}
@@ -376,14 +376,14 @@ func RegisterUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
 			if err := validatePassword(p); err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -392,14 +392,14 @@ func RegisterUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
 			if err := validateUsername(u); err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -407,7 +407,7 @@ func RegisterUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}
@@ -415,7 +415,7 @@ func RegisterUserHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			if err := OnRegister(strings.TrimSpace(u), strings.TrimSpace(e), strings.TrimSpace(p)); err != nil {
 				return gemini.ResponseFormat{
 					gemini.BadRequest,
-					gemini.Mime(err.Error()),
+					err.Error(),
 					nil,
 				}
 			}

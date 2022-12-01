@@ -24,7 +24,7 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	if err != nil {
 		return gemini.ResponseFormat{
 			Status: gemini.BadRequest,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
@@ -40,7 +40,7 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		if err != nil {
 			return gemini.ResponseFormat{
 				Status: gemini.BadRequest,
-				Mime:   gemini.Mime(err.Error()),
+				Mime:   err.Error(),
 				Lines:  nil,
 			}
 		}

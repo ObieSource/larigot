@@ -79,7 +79,7 @@ func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		}
 		return gemini.ResponseFormat{
 			Status: gemini.TemporaryFailure,
-			Mime:   gemini.Mime(err.Error()),
+			Mime:   err.Error(),
 			Lines:  nil,
 		}
 	}
