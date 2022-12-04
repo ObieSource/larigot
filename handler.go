@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 	"sync"
-	"time"
 
 	"codeberg.org/FiskFan1999/gemini"
 	"github.com/coinpaprika/ratelimiter"
@@ -41,7 +40,6 @@ var (
 
 var (
 	rateLimiterWarning sync.Once
-	logChanWarning     sync.Once
 )
 
 func handler(u *url.URL, c *tls.Conn) gemini.Response {
@@ -83,8 +81,6 @@ func handler(u *url.URL, c *tls.Conn) gemini.Response {
 		})
 	}
 
-	start := time.Now()
-
 	path := u.EscapedPath()
 
 	var resp gemini.Response
@@ -120,12 +116,5 @@ func handler(u *url.URL, c *tls.Conn) gemini.Response {
 		}
 	}
 
-	if LogChan != nil {
-		LogChan <- LogEntry{u, c, resp, time.Since(start)}
-	} else {
-		logChanWarning.Do(func() {
-			log.Println("Warning: LogChan == nil")
-		})
-	}
 	return resp
 }

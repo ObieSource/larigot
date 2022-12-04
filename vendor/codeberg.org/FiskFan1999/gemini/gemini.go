@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -95,6 +96,8 @@ func (resp ResponsePlain) String() string {
 }
 
 // Formatted response. The status, MIME type, and each line are specified seperately. Note that each string in Lines MUST NOT contain any whitespace or newline characters of it's own, as this will break the formatting.
+//
+// Note that ResponseFormat uses strings which are UTF-8 encoded. To serve content in other encodings, see ResponsePlain
 type ResponseFormat struct {
 	Status
 	Mime string
@@ -130,6 +133,7 @@ type Server struct {
 	ShutdownCompleted chan byte // server sends byte on this channel when shutdown is completed
 	Ready             chan byte // server sends byte on this channel when the server completes initialization and is listening.
 	ReadLimit         int64     // Maximum limit of URL (default is 1024 according to specification)
+	Logger            io.Writer // If set (!=nil), log requests to this writer.
 }
 
 // Initialize a server, but does not start it. If `address=""` the server will substitute port `1965` which is the default according to the specification. Note that `cert` and `key` are the texts of the certificates themselves, not filenames.
@@ -203,6 +207,8 @@ func (s *Server) Run() error {
 		// The loop then returns to accepting, so that
 		// multiple connections may be served concurrently.
 		go func(c net.Conn) {
+			requestStart := time.Now() // for logger
+
 			// shut down the connection afterwards.
 			defer c.Close()
 			if err := c.SetReadDeadline(time.Now().Add(time.Second * 2)); err != nil {
@@ -252,6 +258,35 @@ func (s *Server) Run() error {
 			response := s.Handler(u, tlscon)
 			responseBytes := response.Bytes()
 			fmt.Fprintf(c, "%s", responseBytes)
+
+			if s.Logger != nil {
+				/*
+					If logger is initialized,
+					save this request to logger.
+				*/
+				timeAtEnd := time.Now()
+				var requestDuration time.Duration = time.Since(requestStart)
+
+				ipport := c.RemoteAddr().String() // client's ip address
+
+				var hostnames []string
+
+				ip, _, err := net.SplitHostPort(ipport)
+				if err != nil {
+					log.Println(err.Error())
+					return
+				} else {
+					hostnames, _ = net.LookupAddr(ip)
+				}
+
+				resultStat, resultMime, err := ParseResponse(responseBytes)
+				resultStr := "(unable to parse response)"
+				if err == nil {
+					resultStr = fmt.Sprintf("%s %s", resultStat, resultMime)
+				}
+
+				fmt.Fprintf(s.Logger, "%s - %s [%s] <%s> \u2192 %s (%s)\n", timeAtEnd.UTC().Format(time.RFC3339), ip, strings.Join(hostnames, ";"), u, resultStr, requestDuration)
+			}
 		}(conn)
 	}
 }

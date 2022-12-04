@@ -8,6 +8,8 @@ import (
 // Slice of UTF-8 encoded lines to be printed by the capsule (not including status and mime type). Note that each string includes the prompt (you may choose to use constants by for example `fmt.Sprintf("%header text", gemini.Header)`. Each line MUST not include any whitespace at the prefix or suffix, including newlines (note that the Gemini protocol specifies Windows-style newlines including carriage returns).
 //
 // Lines is NOT thread safe. (The capsule should not write to this lines struct asyncronously, due to ambiguity due to race conditions).
+//
+// Note that Lines uses strings which are UTF-8 encoded. To serve content in other encodings, see ResponsePlain
 type Lines []string
 
 func (l Lines) doInit() {

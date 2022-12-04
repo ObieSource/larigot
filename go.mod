@@ -3,7 +3,7 @@ module github.com/ObieSource/larigot
 go 1.19
 
 require (
-	codeberg.org/FiskFan1999/gemini v0.0.1
+	codeberg.org/FiskFan1999/gemini v0.1.0
 	github.com/BurntSushi/toml v1.2.0
 	github.com/coinpaprika/ratelimiter v0.2.1
 	github.com/davrux/go-smtptester v0.0.0-20211115065314-2bb8bf1cc76a
@@ -19,7 +19,7 @@ require (
 require (
 	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
 	github.com/emersion/go-smtp v0.15.0 // indirect
-	github.com/sergi/go-diff v1.0.0 // indirect
+	github.com/sergi/go-diff v1.2.0 // indirect
 	golang.org/x/sys v0.0.0-20221010160319-abe0a0adba9c // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 )

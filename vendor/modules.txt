@@ -1,4 +1,4 @@
-# codeberg.org/FiskFan1999/gemini v0.0.1
+# codeberg.org/FiskFan1999/gemini v0.1.0
 ## explicit; go 1.19
 codeberg.org/FiskFan1999/gemini
 codeberg.org/FiskFan1999/gemini/gemtest
@@ -34,8 +34,8 @@ github.com/jordan-wright/email
 # github.com/madflojo/testcerts v1.0.1
 ## explicit; go 1.16
 github.com/madflojo/testcerts
-# github.com/sergi/go-diff v1.0.0
-## explicit
+# github.com/sergi/go-diff v1.2.0
+## explicit; go 1.12
 github.com/sergi/go-diff/diffmatchpatch
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12

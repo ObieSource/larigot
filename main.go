@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"log"
 	"math/rand"
@@ -20,6 +21,8 @@ var (
 	ConfigurationPath string
 )
 
+var logf *os.File
+
 var quitDone chan byte
 
 func OnQuit() {
@@ -31,6 +34,8 @@ func OnQuit() {
 	log.Println("Datbase shutting down")
 	db.Close()
 	log.Println("Datbase shutting down complete.")
+	logf.Close()
+	log.Println("log file closed")
 	quitDone <- byte(0)
 }
 
@@ -74,12 +79,6 @@ func main() {
 	emailReportLimiter = ratelimiter.New(limitStore, 1, time.Minute)
 
 	/*
-		Open log channel
-	*/
-	LogChan = make(chan LogEntry, LogBuffer)
-	go LogLoop()
-
-	/*
 		Load certificates
 	*/
 	cert, err := os.ReadFile(Configuration.Cert)
@@ -115,9 +114,21 @@ func main() {
 	// start command-line prompt
 	go ScanlnLoop()
 
+	/*
+		Open file for logging
+	*/
+	mw := io.MultiWriter(os.Stdout)
+	logf, err = os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Println("Error while opening log file:", err.Error())
+	} else {
+		mw = io.MultiWriter(os.Stdout, logf)
+	}
+
 	// initialize and run server
 	serv = gemini.GetServer(Configuration.Listen, cert, key)
 	serv.Handler = handler
+	serv.Logger = mw
 	go func() {
 		if err := serv.Run(); err != nil {
 			log.Println(err.Error())

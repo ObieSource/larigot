@@ -6,3 +6,4 @@ config.toml
 test.db
 .DS_Store
 external
+log.txt
