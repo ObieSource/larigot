@@ -16,6 +16,8 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
+// signing test
+
 var (
 	serv              *gemini.Server
 	ConfigurationPath string
