@@ -50,7 +50,7 @@ type Thread struct {
 	Archived     bool
 }
 
-func OnNewPost(username, threadID, text string) gemini.ResponseFormat {
+func OnNewPost(username, threadID, text string) gemini.Response {
 	log.Println(username, threadID, text)
 	if err := db.Update(func(tx *bolt.Tx) error {
 		/*
@@ -80,16 +80,12 @@ func OnNewPost(username, threadID, text string) gemini.ResponseFormat {
 
 		return nil
 	}); err != nil {
-		return gemini.ResponseFormat{
-			gemini.TemporaryFailure,
-			err.Error(),
-			nil,
-		}
+		return gemini.TemporaryFailure.Error(err)
 	}
 	return gemini.ResponseFormat{gemini.RedirectTemporary, fmt.Sprintf("/thread/%s/", threadID), nil}
 }
 
-func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
+func NewPostHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	fp := GetFingerprint(c)
 	if fp == nil {
 		return CertRequired
@@ -101,11 +97,7 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 
 	parts := strings.FieldsFunc(u.EscapedPath(), func(r rune) bool { return r == '/' })
 	if len(parts) != 3 {
-		return gemini.ResponseFormat{
-			Status: gemini.BadRequest,
-			Mime:   "Bad input",
-			Lines:  nil,
-		}
+		gemini.BadRequest.Response("Bad input")
 	}
 	id := parts[2]
 
@@ -124,56 +116,32 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		subforumID = string(sf)
 		return nil
 	}); err != nil {
-		return gemini.ResponseFormat{
-			Status: gemini.BadRequest,
-			Mime:   err.Error(),
-			Lines:  nil,
-		}
+		return gemini.BadRequest.Error(err)
 	}
 
 	_, threadPriv, err := GetSubforumPrivFromID(subforumID)
 	if err != nil {
-		return gemini.ResponseFormat{
-			Status: gemini.BadRequest,
-			Mime:   err.Error(),
-			Lines:  nil,
-		}
+		return gemini.BadRequest.Error(err)
 	}
 
 	if !userPriv.Is(threadPriv) {
-		return gemini.ResponseFormat{
-			Status: gemini.BadRequest,
-			Mime:   "User is not priviledged to reply on this subforum.",
-			Lines:  nil,
-		}
+		return gemini.BadRequest.Response("User is not priviledged to reply on this subforum.")
 	}
 
 	if err := CheckForPostNudge(username); errors.Is(err, ShouldPostNudge) {
 		UpdateForPostNudge(username)
 		return PostNudgeHandler(u, c)
 	} else if err != nil {
-		return gemini.ResponseFormat{
-			Status: gemini.TemporaryFailure,
-			Mime:   err.Error(),
-			Lines:  nil,
-		}
+		return gemini.TemporaryFailure.Error(err)
 	}
 
 	if u.RawQuery == "" {
-		return gemini.ResponseFormat{
-			Status: gemini.Input,
-			Mime:   "New post",
-			Lines:  nil,
-		}
+		return gemini.Input.Response("New post")
 	}
 
 	text, err := url.QueryUnescape(u.RawQuery)
 	if err != nil {
-		return gemini.ResponseFormat{
-			Status: gemini.TemporaryFailure,
-			Mime:   err.Error(),
-			Lines:  nil,
-		}
+		return gemini.TemporaryFailure.Error(err)
 	}
 	return OnNewPost(username, id, text)
 }

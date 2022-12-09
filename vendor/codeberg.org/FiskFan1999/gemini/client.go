@@ -6,12 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
+
+// extra comment to force a commit
 
 var ErrParse = errors.New("Parsing error")
 
@@ -50,6 +54,9 @@ type Client struct {
 	Dialer                    // Dialer may include timeout (see net.Dialer)
 	ReadSize    int64         // Gemini protocol does not broadcast Content-Size. Reject responses larger than this.
 	ReadTimeout time.Duration // After sending request, connection will timeout after this amount of time.
+	Logger      io.Writer     // If set (!=nil), log requests to this writer.
+	logger      *log.Logger   // private logger used by log method
+	loggerOnce  sync.Once
 }
 
 // Passed if response is larger than Client.ReadSize
@@ -59,8 +66,22 @@ var ErrWrongProtocol = errors.New("Unsupported protocol")
 
 var ErrTimeout = errors.New("gemini client timeout")
 
+func (c Client) log(u *url.URL, rest string, start time.Time) {
+	if c.Logger == nil {
+		return
+	}
+	c.loggerOnce.Do(func() {
+		c.logger = log.New(c.Logger, "GET - ", log.Ldate|log.Ltime|log.Lmsgprefix)
+	})
+
+	var requestDuration time.Duration = time.Since(start)
+
+	c.logger.Printf("%s %s (%s)", u, rest, requestDuration)
+}
+
 // Make a request to a gemini capsule. To prevent hangs on timeout, use net.Dialer and set Timeout and ReadTimeout. If the hostname is not set in the url, substitute post number 1965. If no protocol is supplied, substitute gemini:// Will pass any errors recieved along the way, or ErrTimeout or ErrResponseTooLarge.
 func (c Client) Get(u *url.URL) ([]byte, error) {
+	start := time.Now()
 	/*
 		Check if port is not specified
 	*/
@@ -82,6 +103,7 @@ func (c Client) Get(u *url.URL) ([]byte, error) {
 		if strings.HasSuffix(err.Error(), "i/o timeout") {
 			return nil, ErrTimeout
 		}
+		c.log(u, err.Error(), start)
 		return nil, err
 	}
 	conn := tls.Client(plainconn, &tls.Config{InsecureSkipVerify: true, ServerName: u.Hostname()})
@@ -92,6 +114,7 @@ func (c Client) Get(u *url.URL) ([]byte, error) {
 		if strings.HasSuffix(err.Error(), "i/o timeout") {
 			return nil, ErrTimeout
 		}
+		c.log(u, err.Error(), start)
 		return nil, err
 	}
 
@@ -102,6 +125,7 @@ func (c Client) Get(u *url.URL) ([]byte, error) {
 		if strings.HasSuffix(err.Error(), "i/o timeout") {
 			return nil, ErrTimeout
 		}
+		c.log(u, err.Error(), start)
 		return nil, err
 	}
 	/*
@@ -112,11 +136,21 @@ func (c Client) Get(u *url.URL) ([]byte, error) {
 		if strings.HasSuffix(err.Error(), "i/o timeout") {
 			return nil, ErrTimeout
 		}
+		c.log(u, err.Error(), start)
 		return nil, err
 	}
 	if n != 0 {
+		c.log(u, "Response payload too large", start)
 		return nil, ErrResponseTooLarge
 	}
+
+	status, mime, err := ParseResponse(response)
+	statusText := "parsing error"
+	if err == nil {
+		statusText = fmt.Sprintf("status=%s mime=%q", status, mime)
+	}
+
+	c.log(u, fmt.Sprintf("recieved (%s)", statusText), start)
 
 	return response, nil
 }

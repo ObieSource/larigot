@@ -19,14 +19,10 @@ type Post SearchResultPost
 
 var ThreadNotFound = errors.New("thread not found")
 
-func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
+func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	pathspl := strings.FieldsFunc(u.EscapedPath(), func(r rune) bool { return r == '/' })
 	if len(pathspl) < 2 {
-		return gemini.ResponseFormat{
-			Status: gemini.BadRequest,
-			Mime:   "Bad input",
-			Lines:  nil,
-		}
+		return gemini.BadRequest.Response("Bad input")
 	}
 	id := pathspl[1]
 	var title string
@@ -77,11 +73,7 @@ func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		if errors.Is(err, ThreadNotFound) {
 			return NotFound
 		}
-		return gemini.ResponseFormat{
-			Status: gemini.TemporaryFailure,
-			Mime:   err.Error(),
-			Lines:  nil,
-		}
+		return gemini.TemporaryFailure.Error(err)
 	}
 
 	writeReplyLine := fmt.Sprintf("%s/new/post/%s/ Write comment", gemini.Link, id)

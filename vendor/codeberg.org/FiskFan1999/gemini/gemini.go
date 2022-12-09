@@ -10,36 +10,9 @@ import (
 	"net"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
-
-// Status code of the server's response
-type Status uint8
-
-// Gemini Status Codes.
-const (
-	Input                     Status = 10
-	SensitiveInput            Status = 11
-	Success                   Status = 20
-	RedirectTemporary         Status = 30
-	RedirectPermanent         Status = 31
-	TemporaryFailure          Status = 40
-	ServerUnavailable         Status = 41
-	CGIError                  Status = 42
-	ProxyError                Status = 43
-	SlowDown                  Status = 44
-	PermanentFailure          Status = 50
-	NotFound                  Status = 51
-	Gone                      Status = 52
-	ProxyRequestRefused       Status = 53
-	BadRequest                Status = 59
-	ClientCertificateRequired Status = 60
-	CertificateNotAuthorised  Status = 61
-	CertificateNotValid       Status = 62
-)
-const ProxyRefused = 53
-
-//go:generate go run golang.org/x/tools/cmd/stringer -type=Status
 
 // Prefixes defined in the Gemini specification.
 const (
@@ -129,11 +102,13 @@ type Server struct {
 	Handler                  // should be reset by user after calling gemini.GetServer
 	Cert              []byte // certificate itself, not a filename.
 	Key               []byte
-	Shutdown          chan byte // send a byte to this channel to initiate the shutdown
-	ShutdownCompleted chan byte // server sends byte on this channel when shutdown is completed
-	Ready             chan byte // server sends byte on this channel when the server completes initialization and is listening.
-	ReadLimit         int64     // Maximum limit of URL (default is 1024 according to specification)
-	Logger            io.Writer // If set (!=nil), log requests to this writer.
+	Shutdown          chan byte   // send a byte to this channel to initiate the shutdown
+	ShutdownCompleted chan byte   // server sends byte on this channel when shutdown is completed
+	Ready             chan byte   // server sends byte on this channel when the server completes initialization and is listening.
+	ReadLimit         int64       // Maximum limit of URL (default is 1024 according to specification)
+	Logger            io.Writer   // If set (!=nil), log requests to this writer.
+	logger            *log.Logger // private logger used by log method
+	loggerOnce        sync.Once
 }
 
 // Initialize a server, but does not start it. If `address=""` the server will substitute port `1965` which is the default according to the specification. Note that `cert` and `key` are the texts of the certificates themselves, not filenames.
@@ -150,7 +125,7 @@ func GetServer(address string, cert, key []byte) *Server {
 	s.Address = a
 	s.Handler = func(u *url.URL, t *tls.Conn) Response {
 		// placeholder
-		return ResponseFormat{50, "Not implemented yet", nil}
+		return TemporaryFailure.Response("Not implemented yet")
 	}
 	s.Cert = cert
 	s.Key = key
@@ -213,6 +188,7 @@ func (s *Server) Run() error {
 			defer c.Close()
 			if err := c.SetReadDeadline(time.Now().Add(time.Second * 2)); err != nil {
 				log.Println(err.Error())
+				s.log(c, err.Error(), requestStart)
 				return
 			}
 
@@ -229,6 +205,7 @@ func (s *Server) Run() error {
 			if limitedReader.N <= 0 {
 				// over limit
 				fmt.Fprintf(c, "%d Request too long\r\n", BadRequest)
+				s.log(c, "Request too long", requestStart)
 				return
 			}
 			if err != nil {
@@ -238,6 +215,7 @@ func (s *Server) Run() error {
 					// Don't print eof error message
 					log.Println(err.Error())
 				}
+				s.log(c, err.Error(), requestStart)
 				return
 			}
 			/*
@@ -250,6 +228,7 @@ func (s *Server) Run() error {
 			if err != nil {
 				// send an error here.
 				fmt.Fprintf(c, "%d improper request", 50)
+				s.log(c, fmt.Sprintf("Improper request: %q", err.Error()), requestStart)
 				return
 			}
 
@@ -259,34 +238,44 @@ func (s *Server) Run() error {
 			responseBytes := response.Bytes()
 			fmt.Fprintf(c, "%s", responseBytes)
 
-			if s.Logger != nil {
-				/*
-					If logger is initialized,
-					save this request to logger.
-				*/
-				timeAtEnd := time.Now()
-				var requestDuration time.Duration = time.Since(requestStart)
+			/*
+				save this request to logger.
+			*/
 
-				ipport := c.RemoteAddr().String() // client's ip address
-
-				var hostnames []string
-
-				ip, _, err := net.SplitHostPort(ipport)
-				if err != nil {
-					log.Println(err.Error())
-					return
-				} else {
-					hostnames, _ = net.LookupAddr(ip)
-				}
-
-				resultStat, resultMime, err := ParseResponse(responseBytes)
-				resultStr := "(unable to parse response)"
-				if err == nil {
-					resultStr = fmt.Sprintf("%s %s", resultStat, resultMime)
-				}
-
-				fmt.Fprintf(s.Logger, "%s - %s [%s] <%s> \u2192 %s (%s)\n", timeAtEnd.UTC().Format(time.RFC3339), ip, strings.Join(hostnames, ";"), u, resultStr, requestDuration)
+			resultStat, resultMime, err := ParseResponse(responseBytes)
+			resultStr := "(unable to parse response)"
+			if err == nil {
+				resultStr = fmt.Sprintf("%s %s", resultStat, resultMime)
 			}
+
+			s.log(c, fmt.Sprintf("<%s> \u2192 %s", u, resultStr), requestStart)
 		}(conn)
 	}
+}
+
+func (s *Server) log(c net.Conn, rest string, start time.Time) {
+	/*
+		Internal function used by server
+	*/
+	if s.Logger == nil {
+		return
+	}
+	s.loggerOnce.Do(func() {
+		s.logger = log.New(s.Logger, "SRV - ", log.Ldate|log.Ltime|log.Lmsgprefix)
+	})
+	ipport := c.RemoteAddr().String() // client's ip address
+
+	var hostnames []string
+
+	ip, _, err := net.SplitHostPort(ipport)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	} else {
+		hostnames, _ = net.LookupAddr(ip)
+	}
+
+	var requestDuration time.Duration = time.Since(start)
+
+	s.logger.Printf("%s [%s] %s (%s)", ip, strings.Join(hostnames, ";"), rest, requestDuration)
 }

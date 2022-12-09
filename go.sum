@@ -2,6 +2,8 @@ codeberg.org/FiskFan1999/gemini v0.0.1 h1:6b+DvpdlKYyT9VNlUR1Y/IwAxCj9qqJo/lEotK
 codeberg.org/FiskFan1999/gemini v0.0.1/go.mod h1:H5srUjwJYR87JI7dRwZsiMxOcAKoKQ1bvesww8vo5hU=
 codeberg.org/FiskFan1999/gemini v0.1.0 h1:qq3CvStjeQG7h+ZN1wp66jQIKWxaO5gZCSbL1xBaO88=
 codeberg.org/FiskFan1999/gemini v0.1.0/go.mod h1:H5srUjwJYR87JI7dRwZsiMxOcAKoKQ1bvesww8vo5hU=
+codeberg.org/FiskFan1999/gemini v0.3.0 h1:e4bBEiT2ajhnQaXVwCcIEZl3/XtW/miZCsdvJ1Y053Y=
+codeberg.org/FiskFan1999/gemini v0.3.0/go.mod h1:H5srUjwJYR87JI7dRwZsiMxOcAKoKQ1bvesww8vo5hU=
 github.com/BurntSushi/toml v1.2.0 h1:Rt8g24XnyGTyglgET/PRUNlrUeu9F5L+7FilkXfZgs0=
 github.com/BurntSushi/toml v1.2.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=

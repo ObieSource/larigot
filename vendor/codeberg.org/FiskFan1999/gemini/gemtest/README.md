@@ -39,3 +39,65 @@ import (
 		serv.Check(Input{"/", 0, []byte("20 text/plain\r\nhello\r\n")})
 	} // this test will pass
 ```
+
+# Documentation
+
+```
+package gemtest // import "codeberg.org/FiskFan1999/gemini/gemtest"
+
+
+VARIABLES
+
+var ErrCheckDidNotMatch = errors.New("Expected result did not match output.")
+
+FUNCTIONS
+
+func Check(handler gemini.Handler, urlstr string, expectedresp []byte) (err error, difference string)
+    Simpler check function. For a given handler and the request URI in string
+    form, check wether the output matches the expected response. Note that
+    client certificates cannot be handled with this function (use gemtest.Testd
+    instead). The error is any error that is thrown while parsing the passed
+    url, or ErrCheckDidNotMatch. If ErrCheckDidNotMatch, then difference is
+    a string with the difference in such a way that it can be printed for
+    debugging.
+
+
+TYPES
+
+type Input struct {
+	// Url to request
+	URL string
+	// Which certificate to use, if many are specified. Use 0 or leave undefined to specify a connection with no certificate. Test will fail immeddiately if Cert > numCert as defined before.
+	Cert int
+	// Full response in byte-array form
+	Response []byte
+}
+
+type TestDstr struct {
+	// The client certificates that may be specified for requests (to simulate different users).
+	Certs []tls.Certificate
+	// the *testing.T object. Note that gemtest will write logs and errors as the test progresses.
+	T *testing.T
+	// The server which is internally used. Most developers will not need to refer to this directly.
+	Serv *gemini.Server
+	// Has unexported fields.
+}
+
+func Testd(t *testing.T, handler gemini.Handler, numCerts uint) (r *TestDstr)
+    Initialize test. t is the testing aparatus that is handed to the user when
+    running golang unit tests. The handler is the gemini.Handler function that
+    will be used. numCerts is the number of unique client certificates to use
+    (to simulate different users connecting to the service.) Set to zero to not
+    generate any certificates. Calling this function automatically starts the
+    server which is internally used for connections.
+
+func (r *TestDstr) Check(cases ...Input)
+    Run unit tests on the gemtest server. Multiple cases can be specified in
+    one function call. These will always be run in the same order, one after
+    another. gemtest will report successful or failed tests.
+
+func (r *TestDstr) Stop()
+    Stop the internal server. Should be called at the end of the test to avoid
+    overloading your computer with listeners.
+
+```
