@@ -82,7 +82,7 @@ func OnNewPost(username, threadID, text string) gemini.Response {
 	}); err != nil {
 		return gemini.TemporaryFailure.Error(err)
 	}
-	return gemini.ResponseFormat{gemini.RedirectTemporary, fmt.Sprintf("/thread/%s/", threadID), nil}
+	return gemini.RedirectTemporary.Response(fmt.Sprintf("/thread/%s/", threadID))
 }
 
 func NewPostHandler(u *url.URL, c *tls.Conn) gemini.Response {
@@ -248,7 +248,7 @@ func ValidateThreadTitle(t string) error {
 	return nil
 }
 
-func OnNewThread(subforum, username, title, text string) gemini.ResponseFormat {
+func OnNewThread(subforum, username, title, text string) gemini.Response {
 	/*
 		Steps:
 		1. In thread bucket, create sub-bucket (key=NextSequence) (now referred to as thread bucket)
@@ -283,11 +283,7 @@ func OnNewThread(subforum, username, title, text string) gemini.ResponseFormat {
 	*/
 	title = strings.TrimSpace(title)
 	if err := ValidateThreadTitle(title); err != nil {
-		return gemini.ResponseFormat{
-			gemini.BadRequest,
-			err.Error(),
-			nil,
-		}
+		return gemini.BadRequest.Error(err)
 	}
 	if err := db.Update(func(tx *bolt.Tx) error {
 		/*
@@ -377,17 +373,14 @@ func OnNewThread(subforum, username, title, text string) gemini.ResponseFormat {
 
 		return nil
 	}); err != nil {
-		return gemini.ResponseFormat{
-			gemini.TemporaryFailure,
-			err.Error(),
-			nil,
-		}
+		return gemini.TemporaryFailure.Error(err)
 	}
 
-	return gemini.ResponseFormat{gemini.RedirectTemporary, fmt.Sprintf("/f/%s/", subforum), nil}
+	return gemini.RedirectTemporary.Response(fmt.Sprintf("/f/%s/", subforum))
+
 }
 
-func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
+func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	// get fingerprint and user
 	fp := GetFingerprint(c)
 	if fp == nil {
@@ -411,76 +404,40 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 
 	parts := strings.FieldsFunc(u.EscapedPath(), func(r rune) bool { return r == '/' })
 	if len(parts) < 3 {
-		return gemini.ResponseFormat{
-			gemini.BadRequest,
-			"Bad request",
-			nil,
-		}
+		return gemini.BadRequest.Response("Bad request")
 	}
 	subforum := parts[2]
 	threadPriv, _, err := GetSubforumPrivFromID(subforum)
 	if err != nil {
-		return gemini.ResponseFormat{
-			gemini.BadRequest,
-			err.Error(),
-			nil,
-		}
+		return gemini.BadRequest.Error(err)
 	}
 	if !userPriv.Is(threadPriv) {
 		// user is not authorized to make threads in this subforum
-		return gemini.ResponseFormat{
-			gemini.BadRequest,
-			"User is not authorized to make a thread in this subforum",
-			nil,
-		}
+		return gemini.BadRequest.Response("User is not authorized to make a thread in this subforum")
 	}
 	switch len(parts) {
 	case 3:
 		if u.RawQuery == "" {
-			return gemini.ResponseFormat{
-				gemini.Input,
-				"Thread title",
-				nil,
-			}
+			return gemini.Input.Response("Thread title")
 		} else {
-			return gemini.ResponseFormat{
-				gemini.RedirectTemporary,
-				fmt.Sprintf("/%s/%s/", strings.Join(parts, "/"), u.RawQuery),
-				nil,
-			}
+			return gemini.RedirectTemporary.Response(fmt.Sprintf("/%s/%s/", strings.Join(parts, "/"), u.RawQuery))
 		}
 	case 4:
 		if u.RawQuery == "" {
-			return gemini.ResponseFormat{
-				gemini.Input,
-				"Thread title",
-				nil,
-			}
+			return gemini.Input.Response("Thread title") // TODO: fix this line mime type
 		} else {
 			title, err := url.PathUnescape(parts[3])
 			if err != nil {
-				return gemini.ResponseFormat{
-					gemini.BadRequest,
-					err.Error(),
-					nil,
-				}
+				return gemini.BadRequest.Error(err)
 			}
 			text, err := url.QueryUnescape(u.RawQuery)
 			if err != nil {
-				return gemini.ResponseFormat{
-					gemini.BadRequest,
-					err.Error(),
-					nil,
-				}
+				return gemini.BadRequest.Error(err)
 			}
 			return OnNewThread(subforum, username, title, text)
 		}
 	default:
 		return BadUserInput
-	}
-
-	return gemini.ResponseFormat{
-		gemini.ServerUnavailable, "text/gemini", nil,
 	}
 }
 

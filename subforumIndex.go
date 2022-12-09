@@ -68,7 +68,7 @@ func GetThreadsForSubforum(subforum string) (threads SubforumThreads, err error)
 	return
 }
 
-func SubforumIndexHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
+func SubforumIndexHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	lines := gemini.Lines{}
 	pathspl := strings.FieldsFunc(u.EscapedPath(), func(r rune) bool { return r == '/' })
 	if len(pathspl) == 1 {
@@ -93,11 +93,7 @@ func SubforumIndexHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	threads, err := GetThreadsForSubforum(subforumID)
 	if err != nil {
 		fmt.Println(err.Error())
-		return gemini.ResponseFormat{
-			gemini.TemporaryFailure,
-			err.Error(),
-			nil,
-		}
+		return gemini.TemporaryFailure.Error(err)
 	}
 
 	for _, t := range threads {

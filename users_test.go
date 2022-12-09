@@ -70,7 +70,7 @@ func TestUserRegistration(t *testing.T) {
 
 	serv := gemtest.Testd(t, handler, 1)
 	serv.Check(
-		gemtest.Input{"gemini://localhost/register/alice/alice%40example.net/?password", 0, []byte("30 /\r\n")},
+		gemtest.Input{URL: "gemini://localhost/register/alice/alice%40example.net/?password", Cert: 0, Response: []byte("30 /\r\n")},
 	)
 
 	/*
@@ -92,13 +92,13 @@ func TestUserRegistration(t *testing.T) {
 	}
 	link := bytes.Split(message1Body, []byte("\n"))[2] // link is on this line in the email message
 
-	serv.Check(gemtest.Input{string(link), 0, []byte("30 /\r\n")})
+	serv.Check(gemtest.Input{URL: string(link), Cert: 0, Response: []byte("30 /\r\n")})
 
 	serv.Check(
-		gemtest.Input{"gemini://localhost/login/alice/?wrong", 0, []byte("60 Client certificate required\r\n")},
-		gemtest.Input{"gemini://localhost/login/alice/?wrong", 1, []byte("59 Login unsuccessful\r\n")},
-		gemtest.Input{"gemini://localhost/login/bob/?password", 1, []byte("59 User does not exist.\r\n")},
-		gemtest.Input{"gemini://localhost/login/alice/?password", 1, []byte("30 /\r\n")},
+		gemtest.Input{URL: "gemini://localhost/login/alice/?wrong", Cert: 0, Response: []byte("60 Client certificate required\r\n")},
+		gemtest.Input{URL: "gemini://localhost/login/alice/?wrong", Cert: 1, Response: []byte("59 Login unsuccessful\r\n")},
+		gemtest.Input{URL: "gemini://localhost/login/bob/?password", Cert: 1, Response: []byte("59 User does not exist.\r\n")},
+		gemtest.Input{URL: "gemini://localhost/login/alice/?password", Cert: 1, Response: []byte("30 /\r\n")},
 	)
 	defer serv.Stop()
 
@@ -128,11 +128,11 @@ func DontTestUserRegistration(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	expected1 := gemini.ResponseFormat{
-		gemini.RedirectTemporary,
-		"/",
-		nil,
+		Status: gemini.RedirectTemporary,
+		Mime:   "/",
+		Lines:  nil,
 	}
-	var response1 gemini.ResponseFormat = RegisterUserHandler(url1, nil)
+	var response1 gemini.Response = RegisterUserHandler(url1, nil)
 	// check for expected values
 	if !cmp.Equal(expected1, response1) {
 		t.Error(cmp.Diff(expected1, response1))
@@ -145,7 +145,7 @@ func DontTestUserRegistration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	expected2 := gemini.ResponseFormat{gemini.ClientCertificateRequired, "Client certificate required", nil}
+	expected2 := gemini.ResponseFormat{Status: gemini.ClientCertificateRequired, Mime: "Client certificate required", Lines: nil}
 	response2 := LoginUserHandler(url2, nil)
 	if !cmp.Equal(expected2, response2) {
 		t.Error(cmp.Diff(expected2, response2))

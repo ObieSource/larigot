@@ -40,9 +40,9 @@ func UpdateForPostNudge(username string) error {
 
 func PostNudgeHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	return gemini.ResponseFormat{
-		gemini.Success,
-		"text/gemini",
-		PostNudge(u.RequestURI()),
+		Status: gemini.Success,
+		Mime:   "text/gemini",
+		Lines:  PostNudge(u.RequestURI()),
 	}
 }
 

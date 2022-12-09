@@ -22,7 +22,7 @@ func TestThreadViewHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	expect := gemini.ResponseFormat{20, "text/gemini", gemini.Lines{
+	expect := gemini.ResponseFormat{Status: 20, Mime: "text/gemini", Lines: gemini.Lines{
 		"# first thread",
 		"=> /new/post/0000000000000001/ Write comment",
 		"",
@@ -43,7 +43,7 @@ func TestThreadViewHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	expect2 := gemini.ResponseFormat{51, "Not found", nil}
+	expect2 := gemini.ResponseFormat{Status: 51, Mime: "Not found", Lines: nil}
 	output2 := ThreadViewHandler(url2, nil)
 	if !cmp.Equal(expect2, output2) {
 		t.Error(cmp.Diff(expect2, output2))

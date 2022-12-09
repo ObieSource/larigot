@@ -64,19 +64,19 @@ func TestCreateThread(t *testing.T) {
 
 	urlParse, _ := url.Parse("/new/thread/other/")
 
-	serv.Check(gemtest.Input{"/", 0, []byte("20 text/gemini\r\n# \r\n\r\nCurrently not logged in.\r\n=> /login/ Log in\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
-	serv.Check(gemtest.Input{"/register/alice/alice%40example.net/?password", 0, []byte("30 /\r\n")})
-	serv.Check(gemtest.Input{"/login/alice/?password", 1, []byte("30 /\r\n")})
-	serv.Check(gemtest.Input{"/", 0, []byte("20 text/gemini\r\n# \r\n\r\nCurrently not logged in.\r\n=> /login/ Log in\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
-	serv.Check(gemtest.Input{"/", 2, []byte("20 text/gemini\r\n# \r\n\r\nCurrently not logged in.\r\n=> /login/ Log in\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
-	serv.Check(gemtest.Input{"/", 1, []byte("20 text/gemini\r\n# \r\n\r\nCurrently logged in as alice.\r\n=> /logout/ Log out\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
-	serv.Check(gemtest.Input{"/new/thread/firstsub/", 0, []byte("60 Client certificate required\r\n")})
-	serv.Check(gemtest.Input{"/new/thread/other/", 1, PostNudgeHandler(urlParse, nil).Bytes()})
-	serv.Check(gemtest.Input{"/new/thread/other/", 1, []byte("59 Subforum not found\r\n")})
-	serv.Check(gemtest.Input{"/new/thread/firstsub/", 1, []byte("10 Thread title\r\n")})
-	serv.Check(gemtest.Input{"/new/thread/firstsub/?title%40here", 1, []byte("30 /new/thread/firstsub/title%40here/\r\n")})
-	serv.Check(gemtest.Input{"/new/thread/firstsub/title%40here/", 1, []byte("10 Thread title\r\n")})
-	serv.Check(gemtest.Input{"/new/thread/firstsub/title%40here/?first%20thread%20here.%0Agoodbye.", 1, []byte("30 /f/firstsub/\r\n")})
+	serv.Check(gemtest.Input{URL: "/", Cert: 0, Response: []byte("20 text/gemini\r\n# \r\n\r\nCurrently not logged in.\r\n=> /login/ Log in\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
+	serv.Check(gemtest.Input{URL: "/register/alice/alice%40example.net/?password", Cert: 0, Response: []byte("30 /\r\n")})
+	serv.Check(gemtest.Input{URL: "/login/alice/?password", Cert: 1, Response: []byte("30 /\r\n")})
+	serv.Check(gemtest.Input{URL: "/", Cert: 0, Response: []byte("20 text/gemini\r\n# \r\n\r\nCurrently not logged in.\r\n=> /login/ Log in\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
+	serv.Check(gemtest.Input{URL: "/", Cert: 2, Response: []byte("20 text/gemini\r\n# \r\n\r\nCurrently not logged in.\r\n=> /login/ Log in\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
+	serv.Check(gemtest.Input{URL: "/", Cert: 1, Response: []byte("20 text/gemini\r\n# \r\n\r\nCurrently logged in as alice.\r\n=> /logout/ Log out\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/", Cert: 0, Response: []byte("60 Client certificate required\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/thread/other/", Cert: 1, Response: PostNudgeHandler(urlParse, nil).Bytes()})
+	serv.Check(gemtest.Input{URL: "/new/thread/other/", Cert: 1, Response: []byte("59 Subforum not found\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/", Cert: 1, Response: []byte("10 Thread title\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/?title%40here", Cert: 1, Response: []byte("30 /new/thread/firstsub/title%40here/\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/title%40here/", Cert: 1, Response: []byte("10 Thread title\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/title%40here/?first%20thread%20here.%0Agoodbye.", Cert: 1, Response: []byte("30 /f/firstsub/\r\n")})
 
 	// we have to change the date of the thread.
 	if err := db.Update(func(tx *bolt.Tx) error {
@@ -91,9 +91,9 @@ func TestCreateThread(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	serv.Check(gemtest.Input{"/f/firstsub/", 1, []byte("20 text/gemini\r\n# first subforum\r\n=> /new/thread/firstsub Post new thread\r\n\r\n=> /thread/0000000000000001/ title@here (01 Jan 2020)\r\n")})
-	serv.Check(gemtest.Input{"/thread/0000000000000001/", 1, []byte("20 text/gemini\r\n# title@here\r\n=> /new/post/0000000000000001/ Write comment\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\n=> /new/post/0000000000000001/ Write comment\r\n")})
-	serv.Check(gemtest.Input{"/search/?%40alice", 0, []byte("20 text/gemini\r\n# Search by user alice\r\n\r\n=> /thread/0000000000000001/ <alice> title@here\r\n")})
+	serv.Check(gemtest.Input{URL: "/f/firstsub/", Cert: 1, Response: []byte("20 text/gemini\r\n# first subforum\r\n=> /new/thread/firstsub Post new thread\r\n\r\n=> /thread/0000000000000001/ title@here (01 Jan 2020)\r\n")})
+	serv.Check(gemtest.Input{URL: "/thread/0000000000000001/", Cert: 1, Response: []byte("20 text/gemini\r\n# title@here\r\n=> /new/post/0000000000000001/ Write comment\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\n=> /new/post/0000000000000001/ Write comment\r\n")})
+	serv.Check(gemtest.Input{URL: "/search/?%40alice", Cert: 0, Response: []byte("20 text/gemini\r\n# Search by user alice\r\n\r\n=> /thread/0000000000000001/ <alice> title@here\r\n")})
 }
 
 func TestValidateThreadTitle(t *testing.T) {
