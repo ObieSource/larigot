@@ -42,6 +42,15 @@ Pass="smtp password"
 #rules="rules.txt"
 
 [[forum]]
+name="Official"
+
+[[forum.subforum]]
+name="Announcements"
+id="announcements"
+threadpriviledge=2
+replypriviledge=2
+
+[[forum]]
 name="First forum"
 
 [[forum.subforum]]

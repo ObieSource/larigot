@@ -15,14 +15,15 @@ var (
 	DBFP          = []byte("certfp")     // key=value: certfp=username
 	DBSUBFORUMS   = []byte("subforums")
 	DBALLTHREADS  = []byte("allthreads")
-	DBUSERTHREADS = []byte("userthreads") // for search
+	DBTHREADTOSF  = []byte("threadtosubforum") // For looking thread id -> subforum id
+	DBUSERTHREADS = []byte("userthreads")      // for search
 	DBALLPOSTS    = []byte("posts")
 	DBUSERPOSTS   = []byte("userposts") // for search
 )
 
 func dbCreateBuckets() error {
 	return db.Update(func(tx *bolt.Tx) error {
-		for _, b := range [][]byte{DBUSERS, DBVALIDATION, DBFP, DBSUBFORUMS, DBALLTHREADS, DBUSERTHREADS, DBALLPOSTS, DBUSERPOSTS} {
+		for _, b := range [][]byte{DBUSERS, DBVALIDATION, DBFP, DBSUBFORUMS, DBALLTHREADS, DBUSERTHREADS, DBALLPOSTS, DBUSERPOSTS, DBTHREADTOSF} {
 			if _, err := tx.CreateBucketIfNotExists(b); err != nil {
 				return err
 			}

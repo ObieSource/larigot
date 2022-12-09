@@ -12,9 +12,37 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+func TestGetSubforumPrivFromID(t *testing.T) {
+	Configuration = &ConfigStr{
+		Forum: []Forum{
+			Forum{Name: "official", Subforum: []Subforum{
+				Subforum{Name: "announcements", ID: "ann", ThreadPriviledge: Admin, ReplyPriviledge: Mod},
+				Subforum{Name: "other", ID: "other", ThreadPriviledge: User, ReplyPriviledge: User},
+			},
+			},
+		},
+	}
+
+	t1, u1, e1 := GetSubforumPrivFromID("ann")
+	if t1 != Admin || u1 != Mod || e1 != nil {
+		t.Errorf("Incorrect values recieved for GetSubforumPrivFromID(\"ann\") t=%s u=%s e=%s", t1, u1, e1)
+	}
+
+	t1, u1, e1 = GetSubforumPrivFromID("other")
+	if t1 != User || u1 != User || e1 != nil {
+		t.Errorf("Incorrect values recieved for GetSubforumPrivFromID(\"other\") t=%s u=%s e=%s", t1, u1, e1)
+	}
+
+	t1, u1, e1 = GetSubforumPrivFromID("error") // will be not found
+	if t1 != User || u1 != User || !errors.Is(e1, SubforumNotFound) {
+		t.Errorf("Incorrect values recieved for GetSubforumPrivFromID(\"error\") t=%s u=%s e=%s", t1, u1, e1)
+	}
+
+}
+
 func TestCreateThread(t *testing.T) {
 	Configuration = &ConfigStr{
-		Forum: []Forum{Forum{"first forum", []Subforum{Subforum{"first subforum", "firstsub"}}}},
+		Forum: []Forum{Forum{"first forum", []Subforum{Subforum{"first subforum", "firstsub", 0, 0}}}},
 		Smtp:  ConfigStrSmtp{Enabled: false},
 	}
 	databaseFile := ".testing/fullthreadtest.db"
@@ -44,7 +72,7 @@ func TestCreateThread(t *testing.T) {
 	serv.Check(gemtest.Input{"/", 1, []byte("20 text/gemini\r\n# \r\n\r\nCurrently logged in as alice.\r\n=> /logout/ Log out\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first forum\r\n=> /f/firstsub/ first subforum\r\n")})
 	serv.Check(gemtest.Input{"/new/thread/firstsub/", 0, []byte("60 Client certificate required\r\n")})
 	serv.Check(gemtest.Input{"/new/thread/other/", 1, PostNudgeHandler(urlParse, nil).Bytes()})
-	serv.Check(gemtest.Input{"/new/thread/other/", 1, []byte("10 Thread title\r\n")})
+	serv.Check(gemtest.Input{"/new/thread/other/", 1, []byte("59 Subforum not found\r\n")})
 	serv.Check(gemtest.Input{"/new/thread/firstsub/", 1, []byte("10 Thread title\r\n")})
 	serv.Check(gemtest.Input{"/new/thread/firstsub/?title%40here", 1, []byte("30 /new/thread/firstsub/title%40here/\r\n")})
 	serv.Check(gemtest.Input{"/new/thread/firstsub/title%40here/", 1, []byte("10 Thread title\r\n")})

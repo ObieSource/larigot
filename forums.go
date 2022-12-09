@@ -10,8 +10,10 @@ type Forum struct {
 }
 
 type Subforum struct {
-	Name string
-	ID   string // unique differentiater between each subforum
+	Name             string
+	ID               string         // unique differentiater between each subforum
+	ThreadPriviledge UserPriviledge // create new thread
+	ReplyPriviledge  UserPriviledge // reply to threads
 }
 
 var (

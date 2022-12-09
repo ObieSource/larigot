@@ -94,7 +94,7 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	if fp == nil {
 		return CertRequired
 	}
-	username, _ := GetUsernameFromFP(fp)
+	username, userPriv := GetUsernameFromFP(fp)
 	if username == "" {
 		return UnauthorizedCert
 	}
@@ -108,6 +108,45 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		}
 	}
 	id := parts[2]
+
+	/*
+		Get subforum, and then check priviledges
+	*/
+
+	var subforumID string
+
+	if err := db.View(func(tx *bolt.Tx) error {
+		idToSubforum := tx.Bucket(DBTHREADTOSF)
+		sf := idToSubforum.Get([]byte(id))
+		if sf == nil {
+			return errors.New("Thread ID not found")
+		}
+		subforumID = string(sf)
+		return nil
+	}); err != nil {
+		return gemini.ResponseFormat{
+			Status: gemini.BadRequest,
+			Mime:   err.Error(),
+			Lines:  nil,
+		}
+	}
+
+	_, threadPriv, err := GetSubforumPrivFromID(subforumID)
+	if err != nil {
+		return gemini.ResponseFormat{
+			Status: gemini.BadRequest,
+			Mime:   err.Error(),
+			Lines:  nil,
+		}
+	}
+
+	if !userPriv.Is(threadPriv) {
+		return gemini.ResponseFormat{
+			Status: gemini.BadRequest,
+			Mime:   "User is not priviledged to reply on this subforum.",
+			Lines:  nil,
+		}
+	}
 
 	if err := CheckForPostNudge(username); errors.Is(err, ShouldPostNudge) {
 		UpdateForPostNudge(username)
@@ -268,6 +307,8 @@ func OnNewThread(subforum, username, title, text string) gemini.ResponseFormat {
 
 		6. Add reference to thread in subforum bucket (key=NextSequence, val=Thread ID)
 
+		7. Add key=threadID val=subforumID pair in DBTHREADTOSF
+
 	*/
 	/*
 		Validate thread title
@@ -360,6 +401,12 @@ func OnNewThread(subforum, username, title, text string) gemini.ResponseFormat {
 		}
 		subforumBucketSub.Put(itob(sfbsNext), threadIDBytes)
 
+		/*
+			7. Add key=threadID val=subforumID pair in DBTHREADTOSF
+		*/
+		threadToSubf := tx.Bucket(DBTHREADTOSF)
+		threadToSubf.Put(threadIDBytes, []byte(subforum))
+
 		return nil
 	}); err != nil {
 		return gemini.ResponseFormat{
@@ -378,7 +425,7 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	if fp == nil {
 		return CertRequired
 	}
-	username, _ := GetUsernameFromFP(fp)
+	username, userPriv := GetUsernameFromFP(fp)
 	if username == "" {
 		return UnauthorizedCert
 	}
@@ -395,6 +442,30 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	}
 
 	parts := strings.FieldsFunc(u.EscapedPath(), func(r rune) bool { return r == '/' })
+	if len(parts) < 3 {
+		return gemini.ResponseFormat{
+			gemini.BadRequest,
+			"Bad request",
+			nil,
+		}
+	}
+	subforum := parts[2]
+	threadPriv, _, err := GetSubforumPrivFromID(subforum)
+	if err != nil {
+		return gemini.ResponseFormat{
+			gemini.BadRequest,
+			err.Error(),
+			nil,
+		}
+	}
+	if !userPriv.Is(threadPriv) {
+		// user is not authorized to make threads in this subforum
+		return gemini.ResponseFormat{
+			gemini.BadRequest,
+			"User is not authorized to make a thread in this subforum",
+			nil,
+		}
+	}
 	switch len(parts) {
 	case 3:
 		if u.RawQuery == "" {
@@ -418,7 +489,6 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 				nil,
 			}
 		} else {
-			subforum := parts[2]
 			title, err := url.PathUnescape(parts[3])
 			if err != nil {
 				return gemini.ResponseFormat{
@@ -444,4 +514,20 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	return gemini.ResponseFormat{
 		gemini.ServerUnavailable, "text/gemini", nil,
 	}
+}
+
+var SubforumNotFound = errors.New("Subforum not found")
+
+func GetSubforumPrivFromID(subforum string) (thread, reply UserPriviledge, err error) {
+	for _, forum := range Configuration.Forum {
+		for _, subf := range forum.Subforum {
+			if subf.ID == subforum {
+				thread = subf.ThreadPriviledge
+				reply = subf.ReplyPriviledge
+				return
+			}
+		}
+	}
+	err = SubforumNotFound
+	return
 }

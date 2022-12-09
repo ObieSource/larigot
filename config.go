@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"os"
 	"time"
 
@@ -97,6 +98,8 @@ func LoadConfig(path string) error {
 		}
 	}
 
-	//fmt.Printf("%+v", Configuration)
+	if true {
+		fmt.Printf("%+v", Configuration)
+	}
 	return nil
 }
