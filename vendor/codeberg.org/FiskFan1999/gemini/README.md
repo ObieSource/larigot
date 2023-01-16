@@ -1,9 +1,23 @@
 # FiskFan1999's Gemini server.
 
-[![Go Report Card](https://goreportcard.com/badge/codeberg.org/FiskFan1999/gemini)](https://goreportcard.com/report/codeberg.org/FiskFan1999/gemini)
-[![Go coverage indicator](coverage_badge.png)](https://github.com/jpoles1/gopherbadger)
+FiskFan1999/gemini is a library for creating custom gemini daemons. For many use-cases, using a standard file-serving gemini server such as molly-brown or similar will suffice. This library was created because I wanted to emulate the workflow of creating custom webservers using the go net/http standard library. This library abstracts away the internal logic of the gemini protocol, so that a capsule developer only has to worry about responding to requests. The client features support for using proxies and is hardened using configurable download size limits and connection/handshake deadlines.
 
-This package implements the Gemini protocol capsule (daemon) and client. The daemon uses a handler-based format as opposed to a file-based to assist in generating dynamic content.
+# Version
+
+This package implements [v0.16.1](./SPECIFICATION.gmi) of the gemini protocol (published January 30, 2022).
+
+# TODO (known bugs)
+
+- Client currently does not verify capsule TLS certificates at all, not even via TOFU strategy.
+- Daemon does not implement status 62.
+- I am looking for help with hardening the daemon and client against malicious connections
+
+# Contribution guidelines
+
+- Please ensure that any patches you submit pass the testing suite.
+- You may want to copy the pre-commit hook in the root directory to your .git/hooks directory (You should read the script and be sure you know what it does first).
+- Note that README.md gets rewritten on every commit as the documentation text is added to it. Please modify the text in `.README_base.md` instead.
+- Feel free to submit a patch as a pull request on codeberg, or email patches (squashed only please) to me at william@williamrehwinkel.net. I reserve the right to post patches that you send me via email on codeberg as pull requests.
 
 # License
 
@@ -14,10 +28,6 @@ This program is free software: you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program.  If not, see https://www.gnu.org/licenses/.
-
-# Version
-
-This package implements [v0.16.1](./SPECIFICATION.gmi) of the gemini protocol (published January 30, 2022).
 
 # Documentation
 
@@ -239,7 +249,8 @@ func ParseResponse(response []byte) (status Status, mime string, err error)
 
 func (s Status) Error(err error) Response
     Similar as Status.Response, except that it accepts an error, and returns a
-    Response with err.Error() as the mime type.
+    Response with err.Error() as the mime type. Is friendly, catches if err ==
+    nil (doesn't panic).
 
 func (s Status) Response(mime string) Response
     Calling Status.Response("") (where Status is one of the constants) returns a

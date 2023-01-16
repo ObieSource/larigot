@@ -83,7 +83,7 @@ type TestDstr struct {
 	// Has unexported fields.
 }
 
-func Testd(t *testing.T, handler gemini.Handler, numCerts uint) (r *TestDstr)
+func Testd(t *testing.T, handler gemini.Handler, numCerts int) (r *TestDstr)
     Initialize test. t is the testing aparatus that is handed to the user when
     running golang unit tests. The handler is the gemini.Handler function that
     will be used. numCerts is the number of unique client certificates to use

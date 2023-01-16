@@ -1,5 +1,9 @@
 package gemini
 
+import (
+	"errors"
+)
+
 // Status code of the server's response
 type Status uint8
 
@@ -37,8 +41,18 @@ func (s Status) Response(mime string) Response {
 	}
 }
 
-// Similar as Status.Response, except that it accepts an error, and returns a Response with err.Error() as the mime type.
+var nilError = errors.New("error == <nil>")
+
+// Similar as Status.Response, except that it accepts an error, and returns a Response with err.Error() as the mime type. Is friendly, catches if err == nil (doesn't panic).
 func (s Status) Error(err error) Response {
+	/*
+		Be friendly, catch if err == nil,
+		don't panic
+	*/
+	if err == nil {
+		err = nilError
+	}
+
 	return ResponseFormat{
 		Status: s,
 		Mime:   err.Error(),
