@@ -37,6 +37,10 @@ func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 
 	lines = append(lines, fmt.Sprintf("%s /search/ Search", gemini.Link), "")
 
+	if priv.Is(Mod) {
+		lines = append(lines, fmt.Sprintf("%s/console/ Operator Console", gemini.Link))
+	}
+
 	/*
 		Construct forums and subforum tree
 	*/

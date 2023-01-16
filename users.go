@@ -238,6 +238,13 @@ func OnRegister(username, email, password string) error {
 		thisUser.Put([]byte("password"), phash)
 		thisUser.Put([]byte("postnudge"), []byte("1")) // 1 = privacy nudge not shown yet
 		thisUser.Put([]byte("email"), []byte(email))
+		/*
+			"muted":
+			"": not muted
+			"<date>": unmuted until this time
+			"permanent": permamently muted
+		*/
+		thisUser.Put([]byte("muted"), []byte(""))
 
 		valid := tx.Bucket(DBVALIDATION)
 		valid.Put(validation, []byte(username))

@@ -92,6 +92,8 @@ func handler(u *url.URL, c *tls.Conn) gemini.Response {
 		resp = LoginUserHandler(u, c)
 	} else if strings.HasPrefix(path, "/logout/") {
 		resp = LogoutUserHandler(u, c)
+	} else if strings.HasPrefix(path, "/console/") {
+		resp = ConsoleHandler(u, c)
 	} else if strings.HasPrefix(path, "/verify/") {
 		resp = VerifyUserHandler(u, c)
 	} else if strings.HasPrefix(path, "/report/") {
