@@ -10,9 +10,9 @@ import (
 
 func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Response {
 	return gemini.ResponseFormat{
-		gemini.Success,
-		"text/plain",
-		gemini.Lines{
+		Status: gemini.Success,
+		Mime:   "text/plain",
+		Lines: gemini.Lines{
 			fmt.Sprintf("Command %q run by %q with priviledge %s", command, user, priv),
 		},
 	}
