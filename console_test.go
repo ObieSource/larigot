@@ -58,10 +58,10 @@ func TestConsole(t *testing.T) {
 		/*
 			Test rudimentary output
 		*/
-		gemtest.Input{URL: "gemini://localhost/console/?hello%20world", Cert: 1, Response: []byte("20 text/plain\r\nCommand \"hello world\" run by \"alice\" with priviledge Admin\r\n")},
-		gemtest.Input{URL: "gemini://localhost/console/?hello%20world", Cert: 2, Response: []byte("20 text/plain\r\nCommand \"hello world\" run by \"bob\" with priviledge Mod\r\n")},
-		gemtest.Input{URL: "gemini://localhost/console/?hello%20world", Cert: 3, Response: []byte("61 Unauthorized\r\n")},
-		gemtest.Input{URL: "gemini://localhost/console/?hello%20world", Cert: 0, Response: []byte("60 Client certificate required\r\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 1, Response: []byte("20 text/gemini\r\nLogged.\r\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 2, Response: []byte("20 text/gemini\r\nLogged.\r\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 3, Response: []byte("61 Unauthorized\r\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 0, Response: []byte("60 Client certificate required\r\n")},
 	)
 
 }

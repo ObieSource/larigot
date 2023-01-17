@@ -19,11 +19,12 @@ var (
 	DBUSERTHREADS = []byte("userthreads")      // for search
 	DBALLPOSTS    = []byte("posts")
 	DBUSERPOSTS   = []byte("userposts") // for search
+	DBCONSOLELOG  = []byte("console")   // log console commands
 )
 
 func dbCreateBuckets() error {
 	return db.Update(func(tx *bolt.Tx) error {
-		for _, b := range [][]byte{DBUSERS, DBVALIDATION, DBFP, DBSUBFORUMS, DBALLTHREADS, DBUSERTHREADS, DBALLPOSTS, DBUSERPOSTS, DBTHREADTOSF} {
+		for _, b := range [][]byte{DBUSERS, DBVALIDATION, DBFP, DBSUBFORUMS, DBALLTHREADS, DBUSERTHREADS, DBALLPOSTS, DBUSERPOSTS, DBTHREADTOSF, DBCONSOLELOG} {
 			if _, err := tx.CreateBucketIfNotExists(b); err != nil {
 				return err
 			}
