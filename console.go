@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -22,6 +23,9 @@ func LogConsoleCommand(user string, priv UserPriviledge, command string) {
 	}
 }
 
+var ErrNotImplementedYet = errors.New("Not implemented yet")
+var ErrUserNotFound = errors.New("User not found")
+
 func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Response {
 
 	/*
@@ -35,6 +39,58 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Res
 	}
 
 	switch fields[0] {
+	case "mute":
+		if len(fields) < 3 {
+			return gemini.BadRequest.Response("mute <username> <\"permanent\"/#days>")
+		}
+		/*
+			Don't allow user to write new threads or posts
+		*/
+		if err := db.Update(func(tx *bolt.Tx) error {
+			allusers := tx.Bucket(DBUSERS)
+			user := allusers.Bucket([]byte(fields[1]))
+			if user == nil {
+				// name not found
+				return ErrUserNotFound
+			}
+
+			if fields[2] == "permanent" {
+				user.Put([]byte("muted"), []byte("permanent"))
+			} else {
+				return ErrNotImplementedYet
+			}
+
+			return nil
+		}); err != nil {
+			return gemini.BadRequest.Error(err)
+		}
+		return gemini.ResponseFormat{
+			Status: gemini.Success,
+			Mime:   "text/plain",
+			Lines:  gemini.Lines{"User has been muted."},
+		}
+
+	case "unmute":
+		if len(fields) < 2 {
+			return gemini.BadRequest.Response("unmute <username>")
+		}
+		if err := db.Update(func(tx *bolt.Tx) error {
+			allusers := tx.Bucket(DBUSERS)
+			user := allusers.Bucket([]byte(fields[1]))
+			if user == nil {
+				// name not found
+				return ErrUserNotFound
+			}
+			user.Put([]byte("muted"), []byte(""))
+			return nil
+		}); err != nil {
+			return gemini.BadRequest.Error(err)
+		}
+		return gemini.ResponseFormat{
+			Status: gemini.Success,
+			Mime:   "text/plain",
+			Lines:  gemini.Lines{"User has been unmuted."},
+		}
 	case "read":
 		/*
 			Read the console command log
@@ -43,7 +99,12 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Res
 		if err := db.View(func(tx *bolt.Tx) error {
 			logs := tx.Bucket(DBCONSOLELOG)
 			logs.ForEach(func(k, v []byte) error { // in order?
-				commands = append([]string{fmt.Sprintf("%s - %s", k, v)}, commands...) // log only
+				s := fmt.Sprintf("%s - %s", k, v)
+				if len(fields) >= 2 && fields[1] == "notime" {
+					s = string(v)
+				}
+
+				commands = append([]string{s}, commands...) // log only
 				return nil
 			})
 			return nil
@@ -72,7 +133,7 @@ func ConsoleHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	var user string
 	var priv UserPriviledge
 	if fp := GetFingerprint(c); fp != nil {
-		user, priv = GetUsernameFromFP(fp)
+		user, priv, _, _ = GetUsernameFromFP(fp)
 	} else {
 		// no certificate
 		return gemini.ClientCertificateRequired.Response("Client certificate required")

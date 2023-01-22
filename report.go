@@ -19,7 +19,7 @@ func ReportHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	if fp == nil {
 		return CertRequired
 	}
-	username, _ := GetUsernameFromFP(fp)
+	username, _, _, _ := GetUsernameFromFP(fp)
 	if username == "" {
 		return UnauthorizedCert
 	}

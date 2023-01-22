@@ -8,6 +8,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+var PERMANENTLYMUTED = []byte("permanent")
+
 var (
 	db            *bolt.DB
 	DBUSERS       = []byte("users")

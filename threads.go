@@ -14,6 +14,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+var CurrentlyMutedResponse = gemini.BadRequest.Response("You are currently muted")
+
 var UnauthorizedCert = gemini.ResponseFormat{
 	Status: gemini.CertificateNotAuthorised,
 	Mime:   "Unauthorized",
@@ -90,9 +92,12 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	if fp == nil {
 		return CertRequired
 	}
-	username, userPriv := GetUsernameFromFP(fp)
+	username, userPriv, isMuted, _ := GetUsernameFromFP(fp)
 	if username == "" {
 		return UnauthorizedCert
+	}
+	if isMuted {
+		return CurrentlyMutedResponse
 	}
 
 	parts := strings.FieldsFunc(u.EscapedPath(), func(r rune) bool { return r == '/' })
@@ -386,9 +391,12 @@ func CreateThreadHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	if fp == nil {
 		return CertRequired
 	}
-	username, userPriv := GetUsernameFromFP(fp)
+	username, userPriv, isMuted, _ := GetUsernameFromFP(fp)
 	if username == "" {
 		return UnauthorizedCert
+	}
+	if isMuted {
+		return CurrentlyMutedResponse
 	}
 
 	if err := CheckForPostNudge(username); errors.Is(err, ShouldPostNudge) {

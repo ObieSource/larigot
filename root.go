@@ -24,11 +24,17 @@ func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 
 	var username string
 	var priv UserPriviledge
+	var isMuted bool
+	var mStatus MutedStatus
 	if fp := GetFingerprint(c); fp != nil { // TODO: check for being logged in
-		username, priv = GetUsernameFromFP(fp)
+		username, priv, isMuted, mStatus = GetUsernameFromFP(fp)
 	}
 	if username != "" {
-		lines = append(lines, fmt.Sprintf("Currently logged in as %s.", DisplayUsername(username, priv)), fmt.Sprintf("%s/logout/ Log out", gemini.Link))
+		lines = append(lines, fmt.Sprintf("Currently logged in as %s.", DisplayUsername(username, priv)))
+		if isMuted {
+			lines = append(lines, fmt.Sprintf("Note: you are currently %s.", mStatus))
+		}
+		lines = append(lines, fmt.Sprintf("%s/logout/ Log out", gemini.Link))
 	} else {
 		lines = append(lines, "Currently not logged in.", fmt.Sprintf("%s/login/ Log in", gemini.Link))
 	}
