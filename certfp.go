@@ -113,6 +113,6 @@ func (m MutedStatus) String() string {
 	if m.IsPermanent {
 		return "permanently muted"
 	}
-	rem := durafmt.Parse(m.Remaining)
+	rem := durafmt.ParseShort(m.Remaining)
 	return fmt.Sprintf("temporarily muted (%s)", rem)
 }

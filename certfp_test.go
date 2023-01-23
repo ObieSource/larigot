@@ -6,10 +6,10 @@ import (
 )
 
 var MutedStatusCases = map[string]MutedStatus{
-	"permanently muted":                  MutedStatus{true, 0},
-	"temporarily muted (1 minute)":       MutedStatus{false, time.Second * 60},
-	"temporarily muted (1 day)":          MutedStatus{false, time.Hour * 24},
-	"temporarily muted (4 weeks 2 days)": MutedStatus{false, time.Hour * 24 * 30},
+	"permanently muted":            MutedStatus{true, 0},
+	"temporarily muted (1 minute)": MutedStatus{false, time.Second * 60},
+	"temporarily muted (1 day)":    MutedStatus{false, time.Hour * 24},
+	"temporarily muted (4 weeks)":  MutedStatus{false, time.Hour * 24 * 30},
 }
 
 func TestMutedStatus(t *testing.T) {
