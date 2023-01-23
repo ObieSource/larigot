@@ -26,7 +26,7 @@ func LogConsoleCommand(user string, priv UserPriviledge, command string) {
 var ErrNotImplementedYet = errors.New("Not implemented yet")
 var ErrUserNotFound = errors.New("User not found")
 
-func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Response {
+func ConsoleCommand(user string, priv UserPriviledge, command string) (string, gemini.Status) {
 
 	/*
 		Log this command in the database.
@@ -35,13 +35,13 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Res
 
 	fields := strings.Fields(command)
 	if len(fields) == 0 {
-		return gemini.BadRequest.Response("Please enter a command")
+		return "Please enter a command", gemini.BadRequest
 	}
 
 	switch fields[0] {
 	case "mute":
 		if len(fields) < 3 {
-			return gemini.BadRequest.Response("mute <username> <\"permanent\"/#days>")
+			return "mute <username> <\"permanent\"/#days>", gemini.BadRequest
 		}
 		/*
 			Don't allow user to write new threads or posts
@@ -62,17 +62,13 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Res
 
 			return nil
 		}); err != nil {
-			return gemini.BadRequest.Error(err)
+			return err.Error(), gemini.BadRequest
 		}
-		return gemini.ResponseFormat{
-			Status: gemini.Success,
-			Mime:   "text/plain",
-			Lines:  gemini.Lines{"User has been muted."},
-		}
+		return "User has been muted.", gemini.Success
 
 	case "unmute":
 		if len(fields) < 2 {
-			return gemini.BadRequest.Response("unmute <username>")
+			return "unmute <username>", gemini.BadRequest
 		}
 		if err := db.Update(func(tx *bolt.Tx) error {
 			allusers := tx.Bucket(DBUSERS)
@@ -84,13 +80,9 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Res
 			user.Put([]byte("muted"), []byte(""))
 			return nil
 		}); err != nil {
-			return gemini.BadRequest.Error(err)
+			return err.Error(), gemini.BadRequest
 		}
-		return gemini.ResponseFormat{
-			Status: gemini.Success,
-			Mime:   "text/plain",
-			Lines:  gemini.Lines{"User has been unmuted."},
-		}
+		return "User has been unmuted.", gemini.Success
 	case "read":
 		/*
 			Read the console command log
@@ -109,24 +101,20 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) gemini.Res
 			})
 			return nil
 		}); err != nil {
-			return gemini.TemporaryFailure.Error(err)
+			return err.Error(), gemini.TemporaryFailure
 		}
 
 		plain := strings.Join(commands, "\n")
-		return gemini.ResponsePlain([]byte(fmt.Sprintf("20 text/plain\r\n%s\n", plain)))
+		return plain, gemini.Success
 
 	case "log":
 		/*
 			Basic command to write anything into the log.
 		*/
-		return gemini.ResponseFormat{
-			Status: gemini.Success,
-			Mime:   "text/gemini",
-			Lines:  gemini.Lines{"Logged."},
-		}
+		return "Logged.", gemini.Success
 	}
 
-	return gemini.BadRequest.Response("Unknown command")
+	return "Unknown command", gemini.BadRequest
 }
 
 func ConsoleHandler(u *url.URL, c *tls.Conn) gemini.Response {
@@ -156,6 +144,10 @@ func ConsoleHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	if unesc, err := url.QueryUnescape(u.RawQuery); err != nil {
 		return gemini.BadRequest.Error(err)
 	} else {
-		return ConsoleCommand(user, priv, unesc)
+		commandResponse, status := ConsoleCommand(user, priv, unesc)
+		if status == gemini.Success {
+			return gemini.ResponsePlain(fmt.Sprintf("20 text/plain\r\n%s", commandResponse))
+		}
+		return status.Response(commandResponse)
 	}
 }

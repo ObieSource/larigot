@@ -61,13 +61,13 @@ func TestConsole(t *testing.T) {
 		/*
 			Test rudimentary output
 		*/
-		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 1, Response: []byte("20 text/gemini\r\nLogged.\r\n")},
-		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 2, Response: []byte("20 text/gemini\r\nLogged.\r\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 1, Response: []byte("20 text/plain\r\nLogged.")},
+		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 2, Response: []byte("20 text/plain\r\nLogged.")},
 		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 3, Response: []byte("61 Unauthorized\r\n")},
 		gemtest.Input{URL: "gemini://localhost/console/?log%20hello%20world", Cert: 0, Response: []byte("60 Client certificate required\r\n")},
 
 		// permanent mute
-		gemtest.Input{URL: "gemini://localhost/console/?mute%20charlie%20permanent", Cert: 1, Response: []byte("20 text/plain\r\nUser has been muted.\r\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?mute%20charlie%20permanent", Cert: 1, Response: []byte("20 text/plain\r\nUser has been muted.")},
 		gemtest.Input{URL: "gemini://localhost/", Cert: 3, Response: []byte("20 text/gemini\r\n# \r\n\r\nCurrently logged in as charlie.\r\nNote: you are currently permanently muted.\r\n=> /logout/ Log out\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first\r\n=> /f/second/ second\r\n\r\n# Source code\r\nlarigot is open-source software. You may download the source code from the following link.\r\n=> https://github.com/ObieSource/larigot\r\n")},
 		// test creating new threads or posts while muted
 		// muted user
@@ -81,13 +81,13 @@ func TestConsole(t *testing.T) {
 		gemtest.Input{URL: "gemini://localhost/new/post/0000000000000001/?hello%21", Cert: 1, Response: []byte("30 /thread/0000000000000001/\r\n")},
 
 		//unmute this user
-		gemtest.Input{URL: "gemini://localhost/console/?unmute%20charlie", Cert: 1, Response: []byte("20 text/plain\r\nUser has been unmuted.\r\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?unmute%20charlie", Cert: 1, Response: []byte("20 text/plain\r\nUser has been unmuted.")},
 		// test above calls, but they should work
 		gemtest.Input{URL: "gemini://localhost/new/thread/second/another/?one", Cert: 3, Response: []byte("20 text/gemini\r\nWelcome to larigot!\r\nThank you for making a post on our bulletin board! We would like to remind you that any content that you post can be viewed by the entire internet. Please be mindful of what content you share, and refrain from revealing any private information.\r\nThis page will only be displayed once. Please refresh the page or click on the following link to continue to writing your post.\r\n=> /new/thread/second/another/?one\r\n")},
 		gemtest.Input{URL: "gemini://localhost/new/thread/second/another/?one", Cert: 3, Response: []byte("30 /f/second/\r\n")},
 		gemtest.Input{URL: "gemini://localhost/new/post/0000000000000001/?hello%21", Cert: 3, Response: []byte("30 /thread/0000000000000001/\r\n")},
 
-		gemtest.Input{URL: "gemini://localhost/console/?read%20notime", Cert: 1, Response: []byte("20 text/plain\r\nalice/Admin:unmute charlie\nalice/Admin:mute charlie permanent\nbob/Mod:log hello world\nalice/Admin:log hello world\n")},
+		gemtest.Input{URL: "gemini://localhost/console/?read%20notime", Cert: 1, Response: []byte("20 text/plain\r\nalice/Admin:unmute charlie\nalice/Admin:mute charlie permanent\nbob/Mod:log hello world\nalice/Admin:log hello world")},
 	)
 
 }

@@ -6,13 +6,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 func OnSTDin(command []byte) {
 	if bytes.Compare(command, []byte("quit")) == 0 {
 		OnQuit()
 	}
-	fmt.Printf("Command recieved: \"%s\"\n", command)
+	resp, status := ConsoleCommand("*Console*", Admin, string(command))
+	fmt.Printf("<%s>\n%s\n%s\n", status, resp, strings.Repeat("-", 30))
 }
 
 func ScanlnLoop() {
