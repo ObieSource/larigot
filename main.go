@@ -130,7 +130,7 @@ func main() {
 		Open file for logging
 	*/
 	mw := io.MultiWriter(os.Stdout)
-	logf, err = os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	logf, err = os.OpenFile(Configuration.Log, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Println("Error while opening log file:", err.Error())
 	} else {
