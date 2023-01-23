@@ -68,7 +68,7 @@ func TestConsole(t *testing.T) {
 
 		// permanent mute
 		gemtest.Input{URL: "gemini://localhost/console/?mute%20charlie%20permanent", Cert: 1, Response: []byte("20 text/plain\r\nUser has been muted.\r\n")},
-		gemtest.Input{URL: "gemini://localhost/", Cert: 3, Response: []byte("20 text/gemini\r\n# \r\n\r\nCurrently logged in as charlie.\r\nNote: you are currently permanently muted.\r\n=> /logout/ Log out\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first\r\n=> /f/second/ second\r\n")},
+		gemtest.Input{URL: "gemini://localhost/", Cert: 3, Response: []byte("20 text/gemini\r\n# \r\n\r\nCurrently logged in as charlie.\r\nNote: you are currently permanently muted.\r\n=> /logout/ Log out\r\n=>  /register Register an account\r\n=>  /search/ Search\r\n\r\n## first\r\n=> /f/second/ second\r\n\r\n# Source code\r\nlarigot is open-source software. You may download the source code from the following link.\r\n=> https://github.com/ObieSource/larigot\r\n")},
 		// test creating new threads or posts while muted
 		// muted user
 		gemtest.Input{URL: "gemini://localhost/new/thread/second/another/?one", Cert: 3, Response: []byte("59 You are currently muted\r\n")},

@@ -8,19 +8,21 @@ import (
 	"codeberg.org/FiskFan1999/gemini"
 )
 
+var sourceCode = "https://github.com/ObieSource/larigot"
+
 func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 	lines := gemini.Lines{}
 
 	// Forum title
-	lines = append(lines, fmt.Sprintf("%s%s", gemini.Header, Configuration.ForumName))
+	lines.Header(1, Configuration.ForumName)
 
 	// add external pages
 	fmt.Println(Configuration.Page)
 	for name, _ := range Configuration.Page {
-		lines = append(lines, fmt.Sprintf("%s/page/%s/ %s", gemini.Link, url.PathEscape(name), name))
+		lines.LinkDesc(url.PathEscape(name), name)
 	}
 
-	lines = append(lines, "")
+	lines.Line("")
 
 	var username string
 	var priv UserPriviledge
@@ -30,21 +32,23 @@ func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 		username, priv, isMuted, mStatus = GetUsernameFromFP(fp)
 	}
 	if username != "" {
-		lines = append(lines, fmt.Sprintf("Currently logged in as %s.", DisplayUsername(username, priv)))
+		lines.Line(fmt.Sprintf("Currently logged in as %s.", DisplayUsername(username, priv)))
 		if isMuted {
-			lines = append(lines, fmt.Sprintf("Note: you are currently %s.", mStatus))
+			lines.Line(fmt.Sprintf("Note: you are currently %s.", mStatus))
 		}
-		lines = append(lines, fmt.Sprintf("%s/logout/ Log out", gemini.Link))
+		lines.Line(fmt.Sprintf("%s/logout/ Log out", gemini.Link))
 	} else {
-		lines = append(lines, "Currently not logged in.", fmt.Sprintf("%s/login/ Log in", gemini.Link))
+		lines.Line("Currently not logged in.", fmt.Sprintf("%s/login/ Log in", gemini.Link))
 	}
 
-	lines = append(lines, fmt.Sprintf("%s /register Register an account", gemini.Link))
+	lines.LinkDesc(" /register", "Register an account")
 
-	lines = append(lines, fmt.Sprintf("%s /search/ Search", gemini.Link), "")
+	lines.LinkDesc(" /search/", "Search")
+
+	lines.Line("")
 
 	if priv.Is(Mod) {
-		lines = append(lines, fmt.Sprintf("%s/console/ Operator Console", gemini.Link))
+		lines.LinkDesc("/console/", "Operator Console")
 	}
 
 	/*
@@ -53,10 +57,10 @@ func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 
 	for _, forum := range Configuration.Forum {
 		// Forum name, and then links to subforums
-		lines = append(lines, fmt.Sprintf("%s%s", gemini.Header2, forum.Name))
+		lines.Header(2, forum.Name)
 
 		for _, subforum := range forum.Subforum {
-			lines = append(lines, fmt.Sprintf("%s/f/%s/ %s", gemini.Link, subforum.ID, subforum.Name))
+			lines.LinkDesc(fmt.Sprintf("/f/%s/", subforum.ID), subforum.Name)
 		}
 	}
 
@@ -64,8 +68,17 @@ func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 		Include onion link if set
 	*/
 	if Configuration.OnionAddress != "" {
-		lines = append(lines, "", fmt.Sprintf("%s%s Also available on tor", gemini.Link, Configuration.OnionAddress))
+		lines.Line("")
+		lines.LinkDesc(Configuration.OnionAddress, "Also available on tor")
 	}
+
+	/*
+		Link to source code
+	*/
+	lines.Line("")
+	lines.Header(1, "Source code")
+	lines.Line("larigot is open-source software. You may download the source code from the following link.")
+	lines.Link(sourceCode)
 
 	return gemini.ResponseFormat{
 		Status: gemini.Success,
