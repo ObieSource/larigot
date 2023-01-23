@@ -26,6 +26,14 @@ func LogConsoleCommand(user string, priv UserPriviledge, command string) {
 var ErrNotImplementedYet = errors.New("Not implemented yet")
 var ErrUserNotFound = errors.New("User not found")
 
+func DoCommand(command string) (string, gemini.Status) {
+	/*
+		ConsoleCommand wrapper
+	*/
+	a, b := ConsoleCommand("*internal*", Admin, command)
+	return a, b
+}
+
 func ConsoleCommand(user string, priv UserPriviledge, command string) (string, gemini.Status) {
 
 	/*
@@ -40,6 +48,9 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 
 	switch fields[0] {
 	case "mute":
+		/*
+			The number amount is in DAYS
+		*/
 		if len(fields) < 3 {
 			return "mute <username> <\"permanent\"/#days>", gemini.BadRequest
 		}
