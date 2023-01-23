@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -68,7 +69,23 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 			if fields[2] == "permanent" {
 				user.Put([]byte("muted"), []byte("permanent"))
 			} else {
-				return ErrNotImplementedYet
+				/*
+					Attempt to convert fields[2] into
+					an integer, then find the time
+					that many days from now, and
+					write that to the database in
+					RFC3339 form
+				*/
+				days, err := strconv.Atoi(fields[2])
+				if err != nil {
+					return errors.New("Invalid field: not \"permanent\" or number of days.")
+				}
+				if days <= 0 {
+					return errors.New("You may not specify a number of days <= 0.")
+				}
+				whenToUnban := time.Now().Add(time.Hour * 24 * time.Duration(days))
+				fmt.Println(whenToUnban)
+				user.Put([]byte("muted"), []byte(whenToUnban.Format(time.RFC3339)))
 			}
 
 			return nil
