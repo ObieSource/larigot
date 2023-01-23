@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -53,7 +52,6 @@ type Thread struct {
 }
 
 func OnNewPost(username, threadID, text string) gemini.Response {
-	log.Println(username, threadID, text)
 	if err := db.Update(func(tx *bolt.Tx) error {
 		/*
 			Get thread sub-bucket

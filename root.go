@@ -17,7 +17,6 @@ func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 	lines.Header(1, Configuration.ForumName)
 
 	// add external pages
-	fmt.Println(Configuration.Page)
 	for name, _ := range Configuration.Page {
 		lines.LinkDesc(url.PathEscape(name), name)
 	}

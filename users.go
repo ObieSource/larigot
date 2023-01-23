@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -209,7 +208,6 @@ const BcryptStrength = 12
 var ErrUserAlreadyExists = errors.New("User with this name already exists")
 
 func OnRegister(username, email, password string) error {
-	log.Printf("user=%s, email=%s, password=%s", username, email, password)
 	phash, err := bcrypt.GenerateFromPassword([]byte(password), BcryptStrength)
 	if err != nil {
 		return err

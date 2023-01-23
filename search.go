@@ -31,12 +31,12 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 
 	var header string
 	var threads []SearchResultThread
-	var posts []SearchResultPost
+	// var posts []SearchResultPost
 
 	if len(searchTerm) >= 2 && searchTerm[0] == '@' {
 		header = fmt.Sprintf("Search by user %s", searchTerm[1:])
 		// username search
-		threads, posts, err = SearchUser(searchTerm[1:])
+		threads, _, err = SearchUser(searchTerm[1:])
 		if err != nil {
 			return gemini.ResponseFormat{
 				Status: gemini.BadRequest,
@@ -45,7 +45,6 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 			}
 		}
 	}
-	fmt.Println(threads, posts, err)
 
 	var lines gemini.Lines
 	lines = append(lines, fmt.Sprintf("%s%s", gemini.Header, header), "")
