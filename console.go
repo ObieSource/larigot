@@ -118,7 +118,11 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 		*/
 		dontShowTime := false
 		numCommands := 32
+		allCommands := false
 		if len(fields) > 1 {
+			if fields[1] == "all" {
+				allCommands = true
+			}
 			nc, err := strconv.Atoi(fields[1])
 			if err == nil {
 				numCommands = nc
@@ -132,7 +136,7 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 			logs := tx.Bucket(DBCONSOLELOG)
 			c := logs.Cursor()
 			k, v := c.Last()
-			for i := 0; i < numCommands; i++ {
+			for i := 0; i < numCommands || allCommands; i++ {
 				if k == nil {
 					break
 				}

@@ -9,7 +9,7 @@ Write a message into the command log
 mute <username> [number of days]
 Permanently or temporarily mute a user
 
-read [number of commands]
+read [number of commands/"all"] ["notime"]
 Read the previously used operator console commands
 
 unmute <username>
