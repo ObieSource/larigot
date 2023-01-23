@@ -21,6 +21,15 @@ var (
 	Configuration *ConfigStr
 )
 
+type ConfigBackup struct {
+	File ConfigFileSaver
+}
+
+type ConfigFileSaver struct {
+	Enabled bool
+	Prefix  string
+}
+
 type ConfigStrSmtp struct {
 	Enabled bool
 	Type    string // "plain", "tls", "starttls"
@@ -44,6 +53,7 @@ type ConfigStr struct {
 	Cert             string // Note: filenames
 	Key              string
 	Database         string // note: filename
+	Backup           ConfigBackup
 	LimitConnections int64
 	LimitWindow      time.Duration // in seconds
 	Log              string        // filename
@@ -97,6 +107,11 @@ func LoadConfig(path string) error {
 			}
 		}
 	}
+
+	/*
+		Initialize backup recievers
+	*/
+	fileSaver.Prefix = Configuration.Backup.File.Prefix
 
 	if true {
 		fmt.Printf("%+v", Configuration)

@@ -12,6 +12,7 @@ require (
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/madflojo/testcerts v1.0.1
 	github.com/spf13/pflag v1.0.5
+	github.com/ulikunitz/xz v0.5.11
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/crypto v0.0.0-20220924013350-4ba4fb4dd9e7
 )

@@ -17,6 +17,11 @@ limitWindow=15 # seconds
 #log file
 log="connections.log"
 
+[Backup]
+file.enabled=false
+# directory path and prefix of filename
+file.prefix="" # /path/to/backups/backup
+
 # user priviledge levels.
 # 1=mod 2=admin
 # 0=ordinary level (not need to set)

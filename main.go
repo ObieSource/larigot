@@ -115,6 +115,18 @@ func main() {
 	go ScanlnLoop()
 
 	/*
+		Start backup timer
+	*/
+	backupTicker := time.Tick(BackupInterval)
+
+	go func() {
+		for {
+			<-backupTicker
+			runBackup()
+		}
+	}()
+
+	/*
 		Open file for logging
 	*/
 	mw := io.MultiWriter(os.Stdout)
