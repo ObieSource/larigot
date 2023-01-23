@@ -93,7 +93,7 @@ func TestCreateThread(t *testing.T) {
 
 	serv.Check(gemtest.Input{URL: "/f/firstsub/", Cert: 1, Response: []byte("20 text/gemini\r\n# first subforum\r\n=> /new/thread/firstsub Post new thread\r\n\r\n=> /thread/0000000000000001/ title@here (01 Jan 2020)\r\n")})
 	serv.Check(gemtest.Input{URL: "/thread/0000000000000001/", Cert: 1, Response: []byte("20 text/gemini\r\n# title@here\r\n=> /new/post/0000000000000001/ Write comment\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\n=> /new/post/0000000000000001/ Write comment\r\n")})
-	serv.Check(gemtest.Input{URL: "/search/?%40alice", Cert: 0, Response: []byte("20 text/gemini\r\n# Search by user alice\r\n\r\n=> /thread/0000000000000001/ <alice> title@here\r\n")})
+	serv.Check(gemtest.Input{URL: "/search/?%40alice", Cert: 0, Response: []byte("20 text/gemini\r\n# Search by user alice\r\n\r\n## Created threads\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000001\r\n> first thread here.\r\n> goodbye.\r\n## Replies\r\n")})
 }
 
 func TestValidateThreadTitle(t *testing.T) {

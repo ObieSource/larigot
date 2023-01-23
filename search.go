@@ -31,12 +31,12 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 
 	var header string
 	var threads []SearchResultThread
-	// var posts []SearchResultPost
+	var posts []SearchResultPost
 
 	if len(searchTerm) >= 2 && searchTerm[0] == '@' {
 		header = fmt.Sprintf("Search by user %s", searchTerm[1:])
 		// username search
-		threads, _, err = SearchUser(searchTerm[1:])
+		threads, posts, err = SearchUser(searchTerm[1:])
 		if err != nil {
 			return gemini.ResponseFormat{
 				Status: gemini.BadRequest,
@@ -49,8 +49,18 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 	var lines gemini.Lines
 	lines = append(lines, fmt.Sprintf("%s%s", gemini.Header, header), "")
 
+	lines.Header(2, "Created threads")
 	for _, t := range threads {
-		lines = append(lines, fmt.Sprintf("%s/thread/%s/ <%s> %s", gemini.Link, t.ID, t.Author, t.Title))
+		lines.LinkDesc(fmt.Sprintf("/thread/%s/", t.ID), fmt.Sprintf("<%s> %s", t.Author, t.Title))
+		lines.Line(fmt.Sprintf("ID: %s", t.ID))
+		lines.Quote(t.FirstPost)
+	}
+
+	lines.Header(2, "Replies")
+	for _, p := range posts {
+		lines.LinkDesc(fmt.Sprintf("/thread/%s/", p.ThreadID), fmt.Sprintf("<%s> %s", p.ThreadAuthor, p.ThreadTitle))
+		lines.Line(fmt.Sprintf("ID: %s thread: %s", p.ID, p.ThreadID))
+		lines.Quote(p.Text)
 	}
 
 	return gemini.ResponseFormat{
@@ -61,16 +71,20 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 }
 
 type SearchResultThread struct {
-	Title  string
-	Author string
-	ID     []byte
+	Title     string
+	Author    string
+	ID        []byte
+	FirstPost string
 }
 
 type SearchResultPost struct {
-	ID     []byte
-	Text   string
-	Author string
-	Time   time.Time
+	ThreadID     []byte
+	ThreadTitle  string
+	ThreadAuthor string
+	ID           []byte
+	Text         string
+	Author       string
+	Time         time.Time
 }
 
 var SearchUsernameNotFound = errors.New("User by that name not found")
@@ -98,6 +112,7 @@ func SearchUser(username string) (threads []SearchResultThread, posts []SearchRe
 		if users.Bucket([]byte(username)) == nil {
 			return SearchUsernameNotFound
 		}
+		allPostsBucket := tx.Bucket(DBALLPOSTS)
 		allThreads := tx.Bucket(DBALLTHREADS)
 		userThreads := tx.Bucket(DBUSERTHREADS)
 		threadsByUser := userThreads.Bucket([]byte(username))
@@ -114,7 +129,18 @@ func SearchUser(username string) (threads []SearchResultThread, posts []SearchRe
 				threadInfo := SearchResultThread{}
 				threadInfo.Title = string(threadBucket.Get([]byte("title")))
 				threadInfo.Author = string(threadBucket.Get([]byte("user")))
-				threadInfo.ID = v
+				threadInfo.ID = make([]byte, len(v))
+				copy(threadInfo.ID, v)
+				/*
+					Get the text of the OP body (check if it is deleted)
+				*/
+				postsInThisThread := threadBucket.Bucket([]byte("posts"))
+				idOfFirstPost := postsInThisThread.Get(itob(1))
+				firstPost := allPostsBucket.Bucket(idOfFirstPost)
+				if firstPost != nil {
+					threadInfo.FirstPost = string(firstPost.Get([]byte("text")))
+				}
+
 				threads = append(threads, threadInfo)
 			}
 		}
@@ -135,7 +161,6 @@ func SearchUser(username string) (threads []SearchResultThread, posts []SearchRe
 			| user     | user1                          |
 			+----------+--------------------------------+
 		*/
-		allPostsBucket := tx.Bucket(DBALLPOSTS)
 		userPosts := tx.Bucket(DBUSERPOSTS)
 		postsByUser := userPosts.Bucket([]byte(username))
 		if postsByUser != nil {
@@ -144,7 +169,11 @@ func SearchUser(username string) (threads []SearchResultThread, posts []SearchRe
 				// v = post id
 				postBucket := allPostsBucket.Bucket(v)
 				if postBucket == nil {
-					return errors.New("postBucket == nil")
+					/*
+						Was deleted
+					*/
+					fmt.Printf("post with id %d not found\n", v)
+					continue
 				}
 				if bytes.Equal(postBucket.Get([]byte("index")), []byte("0000000000000001")) {
 					// don't include first post in thread
@@ -154,7 +183,22 @@ func SearchUser(username string) (threads []SearchResultThread, posts []SearchRe
 					TODO: parse time of post
 				*/
 				post := SearchResultPost{}
+				post.ID = make([]byte, 16)
+				copy(post.ID, v)
+				post.ThreadID = make([]byte, 16)
+				copy(post.ThreadID, postBucket.Get([]byte("thread")))
 				post.Text = string(postBucket.Get([]byte("text")))
+
+				/*
+					Get information about the thread
+				*/
+				thisThread := allThreads.Bucket(post.ThreadID)
+				if thisThread == nil {
+					fmt.Printf("Thread with id %s not found.\n", post.ThreadID)
+				}
+				post.ThreadTitle = string(thisThread.Get([]byte("title")))
+				post.ThreadAuthor = string(thisThread.Get([]byte("user")))
+
 				posts = append(posts, post)
 			}
 		}
