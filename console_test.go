@@ -88,6 +88,7 @@ func TestConsole(t *testing.T) {
 		gemtest.Input{URL: "gemini://localhost/new/post/0000000000000001/?hello%21", Cert: 3, Response: []byte("30 /thread/0000000000000001/\r\n")},
 
 		gemtest.Input{URL: "gemini://localhost/console/?read%20notime", Cert: 1, Response: []byte("20 text/plain\r\nalice/Admin:unmute charlie\nalice/Admin:mute charlie permanent\nbob/Mod:log hello world\nalice/Admin:log hello world")},
+		gemtest.Input{URL: "gemini://localhost/console/?read%201%20notime", Cert: 1, Response: []byte("20 text/plain\r\nalice/Admin:read notime")},
 	)
 
 }

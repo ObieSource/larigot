@@ -115,18 +115,34 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 		/*
 			Read the console command log
 		*/
+		dontShowTime := false
+		numCommands := 32
+		if len(fields) > 1 {
+			nc, err := strconv.Atoi(fields[1])
+			if err == nil {
+				numCommands = nc
+			}
+		}
+		if fields[len(fields)-1] == "notime" {
+			dontShowTime = true
+		}
 		var commands []string
 		if err := db.View(func(tx *bolt.Tx) error {
 			logs := tx.Bucket(DBCONSOLELOG)
-			logs.ForEach(func(k, v []byte) error { // in order?
+			c := logs.Cursor()
+			k, v := c.Last()
+			for i := 0; i < numCommands; i++ {
+				if k == nil {
+					break
+				}
 				s := fmt.Sprintf("%s - %s", k, v)
-				if len(fields) >= 2 && fields[1] == "notime" {
+				if dontShowTime {
 					s = string(v)
 				}
 
-				commands = append([]string{s}, commands...) // log only
-				return nil
-			})
+				commands = append(commands, s) // log only
+				k, v = c.Prev()
+			}
 			return nil
 		}); err != nil {
 			return err.Error(), gemini.TemporaryFailure
