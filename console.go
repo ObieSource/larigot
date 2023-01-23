@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -150,6 +151,13 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 
 		plain := strings.Join(commands, "\n")
 		return plain, gemini.Success
+
+	case "help":
+		helpContents, err := os.ReadFile("consolehelp.txt")
+		if err != nil {
+			return err.Error(), gemini.TemporaryFailure
+		}
+		return string(helpContents), gemini.Success
 
 	case "log":
 		/*

@@ -1,0 +1,16 @@
+OPERATOR CONSOLE COMMANDS
+
+help
+Display this help message
+
+log <message>
+Write a message into the command log
+
+mute <username> [number of days]
+Permanently or temporarily mute a user
+
+read [number of commands]
+Read the previously used operator console commands
+
+unmute <username>
+Immediately unmute a user
