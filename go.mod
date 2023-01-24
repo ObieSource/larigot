@@ -7,6 +7,7 @@ require (
 	github.com/BurntSushi/toml v1.2.0
 	github.com/blevesearch/bleve v1.0.14
 	github.com/blevesearch/bleve/v2 v2.3.6
+	github.com/cheggaaa/pb/v3 v3.1.0
 	github.com/coinpaprika/ratelimiter v0.2.1
 	github.com/davrux/go-smtptester v0.0.0-20211115065314-2bb8bf1cc76a
 	github.com/google/go-cmp v0.5.9
@@ -21,6 +22,7 @@ require (
 
 require (
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
+	github.com/VividCortex/ewma v1.1.1 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/blevesearch/bleve_index_api v1.0.5 // indirect
 	github.com/blevesearch/geo v0.1.16 // indirect
@@ -45,11 +47,16 @@ require (
 	github.com/couchbase/vellum v1.0.2 // indirect
 	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
 	github.com/emersion/go-smtp v0.15.0 // indirect
+	github.com/fatih/color v1.10.0 // indirect
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/json-iterator/go v0.0.0-20171115153421-f7279a603ede // indirect
+	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/willf/bitset v1.1.10 // indirect

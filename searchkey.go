@@ -3,10 +3,12 @@ package main
 import (
 	"errors"
 	"log"
+	"time"
 
 	bleve "github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/mapping"
 	"github.com/blevesearch/bleve/v2/search"
+	pb "github.com/cheggaaa/pb/v3"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -103,6 +105,14 @@ func initKeyword() error {
 		*/
 		if err := db.View(func(tx *bolt.Tx) error {
 			posts := tx.Bucket(DBALLPOSTS)
+			/*
+				Read the current value (current, not increment
+				will EQUAL highest id of post
+				and setup progress bar for that.
+			*/
+			progress := pb.Full.Start64(int64(posts.Sequence()))
+			progress.SetRefreshRate(time.Millisecond * 100)
+			defer progress.Finish()
 			var k []byte
 			c := posts.Cursor()
 			for k, _ = c.First(); k != nil; k, _ = c.Next() {
@@ -115,7 +125,7 @@ func initKeyword() error {
 				current := makeKeywordIndex(string(post.Get([]byte("user"))), string(post.Get([]byte("text"))), k, post.Get([]byte("thread")))
 
 				index.Index(string(k), current)
-				log.Println(string(k), "logged in keyword db")
+				progress.Increment()
 
 			}
 			return nil
