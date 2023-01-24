@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -55,8 +56,14 @@ func main() {
 	flag.StringVarP(&ConfigurationPath, "config", "c", "./config.toml", "Path to configuration file (.toml)")
 	flag.BoolVarP(&repopulateKeywordDB, "repopulate-keywords", "r", false, "Repopulate keywords database before starting server.")
 	flag.BoolVarP(&displayConfiguration, "display-configuration", "d", false, "Show a JSON representation of the configuration. Can be used to debug errors while writing TOML.")
+	flag.BoolVarP(&showFullCopyright, "show-copyright", "s", false, "Show the copyright notice of this binary and its dependencies.")
 
 	flag.Parse()
+
+	if showFullCopyright {
+		fmt.Printf("%s", fullCopyright)
+		os.Exit(0)
+	}
 
 	/*
 		Load configuration
