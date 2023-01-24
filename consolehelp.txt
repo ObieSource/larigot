@@ -3,6 +3,9 @@ OPERATOR CONSOLE COMMANDS
 help
 Display this help message
 
+lock <thread ID>
+Lock a thread
+
 log <message>
 Write a message into the command log
 
@@ -14,3 +17,6 @@ Read the previously used operator console commands
 
 unmute <username>
 Immediately unmute a user
+
+unlock <thread ID>
+Unlock a thread
