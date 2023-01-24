@@ -74,9 +74,11 @@ func OnNewPost(username, threadID, text string) gemini.Response {
 		}
 		thread.Put([]byte("lastmodified"), nowBytes)
 
-		if err = AddNewPostToDatabase(tx, text, username, nowBytes, []byte(threadID), thread); err != nil {
+		err, postID := AddNewPostToDatabase(tx, text, username, nowBytes, []byte(threadID), thread)
+		if err != nil {
 			return err
 		}
+		sendPostToKeywordDB(username, text, itob(postID), []byte(threadID))
 
 		return nil
 	}); err != nil {
@@ -149,7 +151,7 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	return OnNewPost(username, id, text)
 }
 
-func AddNewPostToDatabase(tx *bolt.Tx, text string, username string, nowBytes []byte, threadIDBytes []byte, thread *bolt.Bucket) error {
+func AddNewPostToDatabase(tx *bolt.Tx, text string, username string, nowBytes []byte, threadIDBytes []byte, thread *bolt.Bucket) (err error, postID uint64) {
 	/*
 		3. Add post written by the user to allposts bucket (key=NextSequence)
 		in this sub-bucket: text=Text written by user, user=Username
@@ -160,17 +162,17 @@ func AddNewPostToDatabase(tx *bolt.Tx, text string, username string, nowBytes []
 	*/
 	posts := tx.Bucket(DBALLPOSTS)
 	if posts == nil {
-		return errors.New("posts == nil")
+		return errors.New("posts == nil"), 0
 	}
 	postsID, err := posts.NextSequence()
 	if err != nil {
-		return err
+		return err, 0
 	}
 	postsIDBytes := itob(postsID)
 
 	post, err := posts.CreateBucket(postsIDBytes)
 	if err != nil {
-		return err
+		return err, 0
 	}
 
 	post.Put([]byte("text"), []byte(text))
@@ -189,11 +191,11 @@ func AddNewPostToDatabase(tx *bolt.Tx, text string, username string, nowBytes []
 
 	threadPosts := thread.Bucket([]byte("posts"))
 	if threadPosts == nil {
-		return errors.New("threadPosts == nil")
+		return errors.New("threadPosts == nil"), 0
 	}
 	threadPostsNext, err := threadPosts.NextSequence()
 	if err != nil {
-		return err
+		return err, 0
 	}
 	threadPostsNextBytes := itob(threadPostsNext)
 	threadPosts.Put(threadPostsNextBytes, postsIDBytes)
@@ -207,21 +209,21 @@ func AddNewPostToDatabase(tx *bolt.Tx, text string, username string, nowBytes []
 	*/
 	usersPosts := tx.Bucket(DBUSERPOSTS)
 	if usersPosts == nil {
-		return errors.New("usersPosts == nil")
+		return errors.New("usersPosts == nil"), 0
 	}
 	usersPostsSub, err := usersPosts.CreateBucketIfNotExists([]byte(username))
 	if err != nil {
-		return err
+		return err, 0
 	}
 
 	usersPostsSubNext, err := usersPostsSub.NextSequence()
 	if err != nil {
-		return err
+		return err, 0
 	}
 
 	usersPostsSub.Put(itob(usersPostsSubNext), postsIDBytes)
 
-	return nil
+	return nil, postsID
 }
 
 const (
@@ -345,10 +347,12 @@ func OnNewThread(subforum, username, title, text string) gemini.Response {
 		}
 
 		userthreadsSub.Put(itob(userthreadsSubNext), threadIDBytes)
-
-		if err = AddNewPostToDatabase(tx, text, username, nowBytes, threadIDBytes, thread); err != nil {
+		err, postID := AddNewPostToDatabase(tx, text, username, nowBytes, threadIDBytes, thread)
+		if err != nil {
 			return err
 		}
+
+		sendPostToKeywordDB(username, text, itob(postID), itob(threadID))
 
 		/*
 			6. Add reference to thread in subforum bucket (key=NextSequence, val=Thread ID)

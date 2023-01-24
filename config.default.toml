@@ -10,6 +10,9 @@ key="key.pem"
 #filepath to database file
 database="test.db"
 
+#filepath to keywords database
+keywords="larigot.bleve"
+
 #rate limiting
 limitConnections=5
 limitWindow=15 # seconds

@@ -41,9 +41,13 @@ func TestGetSubforumPrivFromID(t *testing.T) {
 }
 
 func TestCreateThread(t *testing.T) {
+	var bleveDir = ".testing/TestCreateThread.bleve"
+	os.RemoveAll(bleveDir)
+	defer os.RemoveAll(bleveDir)
 	Configuration = &ConfigStr{
-		Forum: []Forum{Forum{"first forum", []Subforum{Subforum{"first subforum", "firstsub", 0, 0}}}},
-		Smtp:  ConfigStrSmtp{Enabled: false},
+		Keywords: bleveDir,
+		Forum:    []Forum{Forum{"first forum", []Subforum{Subforum{"first subforum", "firstsub", 0, 0}}}},
+		Smtp:     ConfigStrSmtp{Enabled: false},
 	}
 	databaseFile := ".testing/fullthreadtest.db"
 	os.Remove(databaseFile)
@@ -57,6 +61,8 @@ func TestCreateThread(t *testing.T) {
 	if err := dbCreateBuckets(); err != nil {
 		t.Fatal(err.Error())
 	}
+
+	initKeyword()
 
 	// test server
 	serv := gemtest.Testd(t, handler, 2)
@@ -77,6 +83,7 @@ func TestCreateThread(t *testing.T) {
 	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/?title%40here", Cert: 1, Response: []byte("30 /new/thread/firstsub/title%40here/\r\n")})
 	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/title%40here/", Cert: 1, Response: []byte("10 Thread title\r\n")})
 	serv.Check(gemtest.Input{URL: "/new/thread/firstsub/title%40here/?first%20thread%20here.%0Agoodbye.", Cert: 1, Response: []byte("30 /f/firstsub/\r\n")})
+	// posts
 
 	// we have to change the date of the thread.
 	if err := db.Update(func(tx *bolt.Tx) error {
@@ -93,7 +100,12 @@ func TestCreateThread(t *testing.T) {
 
 	serv.Check(gemtest.Input{URL: "/f/firstsub/", Cert: 1, Response: []byte("20 text/gemini\r\n# first subforum\r\n=> /new/thread/firstsub Post new thread\r\n\r\n=> /thread/0000000000000001/ title@here (01 Jan 2020)\r\n")})
 	serv.Check(gemtest.Input{URL: "/thread/0000000000000001/", Cert: 1, Response: []byte("20 text/gemini\r\n# title@here\r\n=> /new/post/0000000000000001/ Write comment\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\n=> /new/post/0000000000000001/ Write comment\r\n")})
-	serv.Check(gemtest.Input{URL: "/search/?%40alice", Cert: 0, Response: []byte("20 text/gemini\r\n# Search by user alice\r\n\r\n## Created threads\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000001\r\n> first thread here.\r\n> goodbye.\r\n## Replies\r\n")})
+	// posts than search
+	serv.Check(gemtest.Input{URL: "/new/post/0000000000000001/?this%20will%20also%20get%20shown.%20Goodbye%21", Cert: 1, Response: []byte("30 /thread/0000000000000001/\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/post/0000000000000001/?this%20will%20not%20get%20shown.", Cert: 1, Response: []byte("30 /thread/0000000000000001/\r\n")})
+	serv.Check(gemtest.Input{URL: "/search/?%40alice", Cert: 0, Response: []byte("20 text/gemini\r\n# Search by user alice\r\n\r\n## Created threads\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000001\r\n> first thread here.\r\n> goodbye.\r\n## Replies\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000003 thread: 0000000000000001\r\n> this will not get shown.\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000002 thread: 0000000000000001\r\n> this will also get shown. Goodbye!\r\n")})
+	serv.Check(gemtest.Input{URL: "/search/?goodbye", Cert: 0, Response: []byte("20 text/gemini\r\n# Results for keywords goodbye\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000001 thread: 0000000000000001\r\n> first thread here.\r\n> goodbye.\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000002 thread: 0000000000000001\r\n> this will also get shown. Goodbye!\r\n")})
+	serv.Check(gemtest.Input{URL: "/search/?somethingthatwontgetcaught", Cert: 0, Response: []byte("20 text/gemini\r\n# Results for keywords somethingthatwontgetcaught\r\n")})
 }
 
 func TestValidateThreadTitle(t *testing.T) {

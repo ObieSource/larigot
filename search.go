@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
+func SearchHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	if u.RawQuery == "" {
 		return gemini.ResponseFormat{
 			Status: gemini.Input,
@@ -29,11 +30,12 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 		}
 	}
 
-	var header string
-	var threads []SearchResultThread
-	var posts []SearchResultPost
+	var lines gemini.Lines
 
 	if len(searchTerm) >= 2 && searchTerm[0] == '@' {
+		var header string
+		var threads []SearchResultThread
+		var posts []SearchResultPost
 		header = fmt.Sprintf("Search by user %s", searchTerm[1:])
 		// username search
 		threads, posts, err = SearchUser(searchTerm[1:])
@@ -44,23 +46,79 @@ func SearchHandler(u *url.URL, c *tls.Conn) gemini.ResponseFormat {
 				Lines:  nil,
 			}
 		}
-	}
+		lines = append(lines, fmt.Sprintf("%s%s", gemini.Header, header), "")
 
-	var lines gemini.Lines
-	lines = append(lines, fmt.Sprintf("%s%s", gemini.Header, header), "")
+		lines.Header(2, "Created threads")
+		for _, t := range threads {
+			lines.LinkDesc(fmt.Sprintf("/thread/%s/", t.ID), fmt.Sprintf("<%s> %s", t.Author, t.Title))
+			lines.Line(fmt.Sprintf("ID: %s", t.ID))
+			lines.Quote(t.FirstPost)
+		}
 
-	lines.Header(2, "Created threads")
-	for _, t := range threads {
-		lines.LinkDesc(fmt.Sprintf("/thread/%s/", t.ID), fmt.Sprintf("<%s> %s", t.Author, t.Title))
-		lines.Line(fmt.Sprintf("ID: %s", t.ID))
-		lines.Quote(t.FirstPost)
-	}
+		lines.Header(2, "Replies")
+		for _, p := range posts {
+			lines.LinkDesc(fmt.Sprintf("/thread/%s/", p.ThreadID), fmt.Sprintf("<%s> %s", p.ThreadAuthor, p.ThreadTitle))
+			lines.Line(fmt.Sprintf("ID: %s thread: %s", p.ID, p.ThreadID))
+			lines.Quote(p.Text)
+		}
+	} else {
+		// keyword search
+		foundIDs, err := DoKeywordSearch(searchTerm)
+		if err != nil {
+			return gemini.TemporaryFailure.Error(err)
+		}
 
-	lines.Header(2, "Replies")
-	for _, p := range posts {
-		lines.LinkDesc(fmt.Sprintf("/thread/%s/", p.ThreadID), fmt.Sprintf("<%s> %s", p.ThreadAuthor, p.ThreadTitle))
-		lines.Line(fmt.Sprintf("ID: %s thread: %s", p.ID, p.ThreadID))
-		lines.Quote(p.Text)
+		/*
+			Populate information about these posts from database
+			(accounts for if a post is deleted).
+		*/
+
+		var results []SearchResultPost
+
+		if err := db.View(func(tx *bolt.Tx) error {
+			posts := tx.Bucket(DBALLPOSTS)
+			threads := tx.Bucket(DBALLTHREADS)
+			for _, id := range foundIDs {
+				post := posts.Bucket(id)
+				if post == nil {
+					log.Printf("Note: post bucket %s not found", id)
+					continue
+				}
+
+				var newResult SearchResultPost
+				newResult.Author = string(post.Get([]byte("user")))
+				newResult.Text = string(post.Get([]byte("text")))
+				newResult.ID = make([]byte, 16)
+				copy(newResult.ID, id)
+				newResult.ThreadID = make([]byte, 16)
+				copy(newResult.ThreadID, post.Get([]byte("thread")))
+
+				thread := threads.Bucket(newResult.ThreadID)
+				if thread == nil {
+					// thread may be deleted
+					log.Printf("Thread id %s not found", newResult.ThreadID)
+					continue
+				}
+
+				newResult.ThreadTitle = string(thread.Get([]byte("title")))
+				newResult.ThreadAuthor = string(thread.Get([]byte("user")))
+
+				results = append(results, newResult)
+
+			}
+			return nil
+		}); err != nil {
+			return gemini.TemporaryFailure.Error(err)
+		}
+
+		// write replies
+		lines.Header(1, fmt.Sprintf("Results for keywords %s", searchTerm))
+		for _, p := range results {
+			lines.LinkDesc(fmt.Sprintf("/thread/%s/", p.ThreadID), fmt.Sprintf("<%s> %s", p.ThreadAuthor, p.ThreadTitle))
+			lines.Line(fmt.Sprintf("ID: %s thread: %s", p.ID, p.ThreadID))
+			lines.Quote(p.Text)
+		}
+
 	}
 
 	return gemini.ResponseFormat{

@@ -53,6 +53,7 @@ type ConfigStr struct {
 	Cert             string // Note: filenames
 	Key              string
 	Database         string // note: filename
+	Keywords         string // filename path to bleve
 	Backup           ConfigBackup
 	LimitConnections int64
 	LimitWindow      time.Duration // in seconds

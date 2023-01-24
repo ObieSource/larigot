@@ -53,6 +53,7 @@ func main() {
 		Parse flags
 	*/
 	flag.StringVarP(&ConfigurationPath, "config", "c", "./config.toml", "Path to configuration file (.toml)")
+	flag.BoolVarP(&repopulateKeywordDB, "repopulate-keywords", "r", false, "Repopulate keywords database before starting server.")
 
 	flag.Parse()
 
@@ -99,6 +100,14 @@ func main() {
 		Open database file
 	*/
 	initDatabase()
+
+	/*
+		Initialize keyword
+	*/
+	if err := initKeyword(); err != nil {
+		log.Printf("Error during keyword database initialization: %s\n", err.Error())
+		os.Exit(3)
+	}
 
 	// handle ctrl-c
 	quitChannel := make(chan os.Signal, 1)
