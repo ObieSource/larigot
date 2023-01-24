@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -20,6 +21,16 @@ type Post SearchResultPost
 var ThreadNotFound = errors.New("thread not found")
 
 func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.Response {
+
+	/*
+		Get user priviledge, because if the thread is locked mods and admins can still reply.
+	*/
+	var userPriv UserPriviledge
+	fp := GetFingerprint(c)
+	if fp != nil {
+		_, userPriv, _, _ = GetUsernameFromFP(fp)
+	}
+
 	pathspl := strings.FieldsFunc(u.EscapedPath(), func(r rune) bool { return r == '/' })
 	if len(pathspl) < 2 {
 		return gemini.BadRequest.Response("Bad input")
@@ -28,6 +39,8 @@ func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	var title string
 
 	var posts []Post
+
+	var isLocked bool = false
 
 	if err := db.View(func(tx *bolt.Tx) error {
 		/*
@@ -42,6 +55,11 @@ func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.Response {
 			return ThreadNotFound
 		}
 		title = string(thread.Get([]byte("title")))
+
+		if bytes.Equal(thread.Get([]byte("locked")), []byte("1")) {
+			// currently locked
+			isLocked = true
+		}
 
 		/*
 			Collect all posts from this thread.
@@ -76,10 +94,18 @@ func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.Response {
 		return gemini.TemporaryFailure.Error(err)
 	}
 
-	writeReplyLine := fmt.Sprintf("%s/new/post/%s/ Write comment", gemini.Link, id)
+	var writeReplyLines []string
+	if isLocked {
+		writeReplyLines = []string{"This thread is locked and not accepting new comments."}
+	}
+	if !isLocked || userPriv.Is(whichPrivCanReplyToLockedThread) { // see threads.go
+		writeReplyLines = append(writeReplyLines, fmt.Sprintf("%s/new/post/%s/ Write comment", gemini.Link, id))
+	}
 
 	lines := gemini.Lines{}
-	lines = append(lines, fmt.Sprintf("%s%s", gemini.Header, title), writeReplyLine, "")
+	lines = append(lines, fmt.Sprintf("%s%s", gemini.Header, title))
+	lines = append(lines, writeReplyLines...)
+	lines = append(lines, "")
 
 	/*
 		Add posts to page
@@ -108,7 +134,7 @@ func ThreadViewHandler(u *url.URL, c *tls.Conn) gemini.Response {
 		)
 	}
 
-	lines = append(lines, writeReplyLine)
+	lines = append(lines, writeReplyLines...)
 
 	return gemini.ResponseFormat{
 		Status: gemini.Success,

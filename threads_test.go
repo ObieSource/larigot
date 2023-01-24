@@ -100,12 +100,25 @@ func TestCreateThread(t *testing.T) {
 
 	serv.Check(gemtest.Input{URL: "/f/firstsub/", Cert: 1, Response: []byte("20 text/gemini\r\n# first subforum\r\n=> /new/thread/firstsub Post new thread\r\n\r\n=> /thread/0000000000000001/ title@here (01 Jan 2020)\r\n")})
 	serv.Check(gemtest.Input{URL: "/thread/0000000000000001/", Cert: 1, Response: []byte("20 text/gemini\r\n# title@here\r\n=> /new/post/0000000000000001/ Write comment\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\n=> /new/post/0000000000000001/ Write comment\r\n")})
+	/*
+		Test locking of threads
+	*/
+	DoCommand("lock 0000000000000001")
+	serv.Check(gemtest.Input{URL: "/thread/0000000000000001/", Cert: 0, Response: []byte("20 text/gemini\r\n# title@here\r\nThis thread is locked and not accepting new comments.\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\nThis thread is locked and not accepting new comments.\r\n")})
+	serv.Check(gemtest.Input{URL: "/thread/0000000000000001/", Cert: 1, Response: []byte("20 text/gemini\r\n# title@here\r\nThis thread is locked and not accepting new comments.\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\nThis thread is locked and not accepting new comments.\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/post/0000000000000001/?this%20will%20also%20get%20shown.%20Goodbye%21", Cert: 0, Response: []byte("60 Client certificate required\r\n")})
+	serv.Check(gemtest.Input{URL: "/new/post/0000000000000001/?this%20will%20also%20get%20shown.%20Goodbye%21", Cert: 1, Response: []byte("40 Thread is locked\r\n")})
+
+	// unlock
+	DoCommand("unlock 0000000000000001")
+	serv.Check(gemtest.Input{URL: "/thread/0000000000000001/", Cert: 1, Response: []byte("20 text/gemini\r\n# title@here\r\n=> /new/post/0000000000000001/ Write comment\r\n\r\n### alice\r\n=> /report/0000000000000001/ Wed, 01 Jan 2020 05:00:00 UTC (click to report)\r\n> first thread here.\r\n> goodbye.\r\n\r\n=> /new/post/0000000000000001/ Write comment\r\n")})
 	// posts than search
 	serv.Check(gemtest.Input{URL: "/new/post/0000000000000001/?this%20will%20also%20get%20shown.%20Goodbye%21", Cert: 1, Response: []byte("30 /thread/0000000000000001/\r\n")})
 	serv.Check(gemtest.Input{URL: "/new/post/0000000000000001/?this%20will%20not%20get%20shown.", Cert: 1, Response: []byte("30 /thread/0000000000000001/\r\n")})
 	serv.Check(gemtest.Input{URL: "/search/?%40alice", Cert: 0, Response: []byte("20 text/gemini\r\n# Search by user alice\r\n\r\n## Created threads\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000001\r\n> first thread here.\r\n> goodbye.\r\n## Replies\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000003 thread: 0000000000000001\r\n> this will not get shown.\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000002 thread: 0000000000000001\r\n> this will also get shown. Goodbye!\r\n")})
 	serv.Check(gemtest.Input{URL: "/search/?goodbye", Cert: 0, Response: []byte("20 text/gemini\r\n# Results for keywords goodbye\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000001 thread: 0000000000000001\r\n> first thread here.\r\n> goodbye.\r\n=> /thread/0000000000000001/ <alice> title@here\r\nID: 0000000000000002 thread: 0000000000000001\r\n> this will also get shown. Goodbye!\r\n")})
 	serv.Check(gemtest.Input{URL: "/search/?somethingthatwontgetcaught", Cert: 0, Response: []byte("20 text/gemini\r\n# Results for keywords somethingthatwontgetcaught\r\n")})
+
 }
 
 func TestValidateThreadTitle(t *testing.T) {

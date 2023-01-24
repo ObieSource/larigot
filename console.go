@@ -49,6 +49,34 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 	}
 
 	switch fields[0] {
+	case "lock":
+		/*
+			lock <thread ID>
+		*/
+		if len(fields) != 2 {
+			return "lock <thread ID>", gemini.BadRequest
+		}
+
+		if err := MuteOrUnmuteThread([]byte(fields[1]), []byte("1")); err != nil {
+			return err.Error(), gemini.TemporaryFailure
+		}
+
+		return "thread has been locked.", gemini.Success
+
+	case "unlock":
+		/*
+			lock <thread ID>
+		*/
+		if len(fields) != 2 {
+			return "unlock <thread ID>", gemini.BadRequest
+		}
+
+		if err := MuteOrUnmuteThread([]byte(fields[1]), []byte("0")); err != nil {
+			return err.Error(), gemini.TemporaryFailure
+		}
+
+		return "thread has been unlocked.", gemini.Success
+
 	case "mute":
 		/*
 			The number amount is in DAYS
@@ -171,6 +199,17 @@ func ConsoleCommand(user string, priv UserPriviledge, command string) (string, g
 	}
 
 	return "Unknown command", gemini.BadRequest
+}
+
+func MuteOrUnmuteThread(id []byte, status []byte) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		allThreads := tx.Bucket(DBALLTHREADS)
+		thread := allThreads.Bucket(id)
+		if thread == nil {
+			return errors.New("Thread not found.")
+		}
+		return thread.Put([]byte("locked"), status)
+	})
 }
 
 func ConsoleHandler(u *url.URL, c *tls.Conn) gemini.Response {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -14,6 +15,10 @@ import (
 )
 
 var CurrentlyMutedResponse = gemini.BadRequest.Response("You are currently muted")
+
+var whichPrivCanReplyToLockedThread UserPriviledge = Mod
+
+var ErrThreadIsLocked = errors.New("Thread is locked")
 
 var UnauthorizedCert = gemini.ResponseFormat{
 	Status: gemini.CertificateNotAuthorised,
@@ -51,7 +56,7 @@ type Thread struct {
 	Archived     bool
 }
 
-func OnNewPost(username, threadID, text string) gemini.Response {
+func OnNewPost(username, threadID, text string, userPriv UserPriviledge) gemini.Response {
 	if err := db.Update(func(tx *bolt.Tx) error {
 		/*
 			Get thread sub-bucket
@@ -65,6 +70,13 @@ func OnNewPost(username, threadID, text string) gemini.Response {
 		if thread == nil {
 			// not found
 			return ErrNotFound
+		}
+
+		if bytes.Equal(thread.Get([]byte("locked")), []byte("1")) && !userPriv.Is(whichPrivCanReplyToLockedThread) {
+			/*
+				Thread locked and is not moderator
+			*/
+			return ErrThreadIsLocked
 		}
 
 		// change LastModified time
@@ -148,7 +160,7 @@ func NewPostHandler(u *url.URL, c *tls.Conn) gemini.Response {
 	if err != nil {
 		return gemini.TemporaryFailure.Error(err)
 	}
-	return OnNewPost(username, id, text)
+	return OnNewPost(username, id, text, userPriv)
 }
 
 func AddNewPostToDatabase(tx *bolt.Tx, text string, username string, nowBytes []byte, threadIDBytes []byte, thread *bolt.Bucket) (err error, postID uint64) {
