@@ -2,12 +2,15 @@ package main
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/BurntSushi/toml"
 )
+
+var displayConfiguration = false
 
 //go:embed config.default.toml
 var ConfigDefault []byte
@@ -114,8 +117,13 @@ func LoadConfig(path string) error {
 	*/
 	fileSaver.Prefix = Configuration.Backup.File.Prefix
 
-	if true {
-		fmt.Printf("%+v", Configuration)
+	if displayConfiguration {
+		jsonBytes, err := json.MarshalIndent(Configuration, "", "  ")
+		if err != nil {
+			fmt.Println("Error while marshalling Configuration:", err.Error())
+		} else {
+			fmt.Printf("%s\n", jsonBytes)
+		}
 	}
 	return nil
 }
