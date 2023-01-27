@@ -48,47 +48,24 @@ $ ./larigot -c config.toml
 - Run `./larigot -c config.toml` again, and the webserver will start.
 - Send `SIGINT` signal to shut down the webserver.
 
+## Notes
+
+**Warning: Since larigot is still in the milestone stage of development, the configuration file syntax AND database layout are not yet frozen, and backwards-compatability braking changes are possible. I do not recommend running larigot in production yet.**
+
+You may want to add some custom pages to the board. These can be on any topic from rules to a welcome page for new users, and can help add more personality to your bulletin board.
+
+For now, all custom pages are static text only. To add a page, include an entry in the configuration file like so:
+```toml
+[page]
+name="/path/to/file"
+rules="rules.txt"
+```
+in which each key ("name", "rules") is the name of the page as it is displayed on the homepage, and the value is the path to the file.
+
+As for the file itself, note that the file is required to include the gemini header (`20 text/gemini`, etc.) on the first line. In other words, the capsule will return the contents of the file only, so it should adhere to gemini response syntax. Remember that this includes the requirement of at least the header line ending in a carriage-return and new-line.
+
 # Contribution guide
 Please be aware of the unit tests which are run via `go test`. Be mindful of wether or not a contribution causes the unit tests to fail (it may sometimes be required to change the unit tests if the new behavior is expected).
 
-Also note that larigot vendors its dependencies.
-
-# Example pages
-Note that each page will look slightly different depending on which gemini client is being used.
-```
-# obieBoard
-=> /page/rules/ rules
-
-Currently logged in as alice.
-=> /logout/ Log out
-=>  /register Register an account
-=>  /search/ Search
-
-## First forum
-=> /f/firstfirstsub/ First subforum
-=> /f/firstsecondsub/ Second subforum
-## Second forum
-=> /f/secondfirstsub/ First subforum
-
-```
-
-```
-# Second subforum
-=> /new/thread/firstsecondsub Post new thread
-
-=> /thread/0000000000000002/ Hello world! (2 seconds)
-
-```
-
-```
-# Hello world!
-=> /new/post/0000000000000002/ Write comment
-
-### alice
-=> /report/0000000000000002/ 36 seconds (click to report)
-> Hello everyone, this is my first post. Welcome to larigot!
-
-=> /new/post/0000000000000002/ Write comment
-
-```
+Fell free to submit patches as [pull requests](https://github.com/ObieSource/larigot/pulls) to the larigot repository on Github, or by email to william@williamrehwinkel.net. I reserve the right to upload email patches as pull requests or merge them to main.
 
