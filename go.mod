@@ -3,7 +3,7 @@ module github.com/ObieSource/larigot
 go 1.19
 
 require (
-	codeberg.org/FiskFan1999/gemini v0.3.1
+	codeberg.org/FiskFan1999/gemini v0.4.0
 	github.com/BurntSushi/toml v1.2.0
 	github.com/blevesearch/bleve/v2 v2.3.6
 	github.com/cheggaaa/pb/v3 v3.1.0

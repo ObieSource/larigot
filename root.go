@@ -76,6 +76,7 @@ func RootHandler(c *tls.Conn) gemini.ResponseFormat {
 	*/
 	lines.Line("")
 	lines.Header(1, "Source code")
+	lines.LinkDesc("/readme/", "About larigot")
 	lines.Line("larigot is open-source software. You may download the source code from the following link.")
 	lines.Link(sourceCode)
 
