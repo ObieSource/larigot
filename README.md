@@ -13,6 +13,8 @@ It is important to acknowledge that it would be impossible to implement some fea
 - User avatars
 - File uploads (implementation would be complicated and not supported by any gemini client)
 
+larigot is hosted on the organization of ObieSource, the open-source club at Oberlin College.
+
 # License
 
 Copyright (C) 2022 William Rehwinkel
@@ -69,3 +71,8 @@ Please be aware of the unit tests which are run via `go test`. Be mindful of wet
 
 Fell free to submit patches as [pull requests](https://github.com/ObieSource/larigot/pulls) to the larigot repository on Github, or by email to william@williamrehwinkel.net. I reserve the right to upload email patches as pull requests or merge them to main.
 
+# Support
+For support and discussion about larigot development or hosting, please use one of the following routes:
+- IRC: irc.nixnet.services #larigot 
+- Discord: [ObieSource guild](https://obiesource.github.io/), #larigot-text
+- GitHub issue or email to the address posted above also welcome.
