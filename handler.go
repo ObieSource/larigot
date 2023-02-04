@@ -88,8 +88,6 @@ func handler(u *url.URL, c *tls.Conn) gemini.Response {
 		resp = RootHandler(c)
 	} else if strings.HasPrefix(path, "/register/") {
 		resp = RegisterUserHandler(u, c)
-	} else if strings.HasPrefix(path, "/readme/") {
-		resp = ShowReadmeHandler(u, c)
 	} else if strings.HasPrefix(path, "/login/") {
 		resp = LoginUserHandler(u, c)
 	} else if strings.HasPrefix(path, "/logout/") {
