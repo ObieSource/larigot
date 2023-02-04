@@ -3,7 +3,7 @@ module github.com/ObieSource/larigot
 go 1.19
 
 require (
-	codeberg.org/FiskFan1999/gemini v0.3.1
+	codeberg.org/FiskFan1999/gemini v0.4.0
 	github.com/BurntSushi/toml v1.2.0
 	github.com/blevesearch/bleve/v2 v2.3.6
 	github.com/cheggaaa/pb/v3 v3.1.0
@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
-	github.com/madflojo/testcerts v1.0.1
+	github.com/madflojo/testcerts v1.0.2
 	github.com/spf13/pflag v1.0.5
 	github.com/ulikunitz/xz v0.5.11
 	go.etcd.io/bbolt v1.3.6

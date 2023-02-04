@@ -63,6 +63,17 @@ var ErrResponseTooLarge = errors.New("Payload larger than defined ReadSize")
 var ErrTimeout = errors.New("gemini client timeout")
 var ErrWrongProtocol = errors.New("Unsupported protocol")
 
+FUNCTIONS
+
+func InsertCarriageReturn(in []byte) []byte
+    Insert carriage-returns (\r) in front of newline characters (\n). Using
+    carriage-returns along with newlines is required for the header line and not
+    for the rest of the document.
+
+    InsertCarriageReturn does not interfere with any newlines that are alreay
+    preceeded by a carriage-return.
+
+
 TYPES
 
 type Client struct {
